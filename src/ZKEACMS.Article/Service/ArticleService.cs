@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.RepositoryPattern;
 using System;
 using System.Collections.Generic;
@@ -7,42 +10,76 @@ using Easy;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Easy.Extend;
+using ZKEACMS.Event;
+using Easy.Constant;
 
 namespace ZKEACMS.Article.Service
 {
     public class ArticleService : ServiceBase<ArticleEntity, CMSDbContext>, IArticleService
     {
         private readonly ILocalize _localize;
-        public ArticleService(IApplicationContext applicationContext, ILocalize localize, CMSDbContext dbContext) 
+        private readonly IEventManager _eventManager;
+        public ArticleService(IApplicationContext applicationContext, 
+            ILocalize localize, 
+            CMSDbContext dbContext,
+            IEventManager eventManager) 
             : base(applicationContext, dbContext)
         {
             _localize = localize;
+            _eventManager = eventManager;
         }
         public override ServiceResult<ArticleEntity> Add(ArticleEntity item)
         {
+            ServiceResult<ArticleEntity> result;
             if (item.Url.IsNotNullAndWhiteSpace())
             {
                 if (GetByUrl(item.Url) != null)
                 {
-                    var result = new ServiceResult<ArticleEntity>();
-                    result.RuleViolations.Add(new RuleViolation("Url", _localize.Get("Url已存在")));
+                    result = new ServiceResult<ArticleEntity>();
+                    result.RuleViolations.Add(new RuleViolation("Url", _localize.Get("URL already exists")));
                     return result;
                 }
             }
-            return base.Add(item);
+            _eventManager.Trigger(Events.OnArticleAdding, item);
+            result = base.Add(item);
+            if (!result.HasViolation)
+            {
+                _eventManager.Trigger(Events.OnArticleAdded, item);
+            }
+            return result;
         }
         public override ServiceResult<ArticleEntity> Update(ArticleEntity item)
         {
+            ServiceResult<ArticleEntity> result;
             if (item.Url.IsNotNullAndWhiteSpace())
             {
                 if (Count(m => m.Url == item.Url && m.ID != item.ID) > 0)
                 {
-                    var result = new ServiceResult<ArticleEntity>();
-                    result.RuleViolations.Add(new RuleViolation("Url", _localize.Get("Url已存在")));
+                    result = new ServiceResult<ArticleEntity>();
+                    result.RuleViolations.Add(new RuleViolation("Url", _localize.Get("URL already exists")));
                     return result;
                 }
             }
-            return base.Update(item);
+            _eventManager.Trigger(Events.OnArticleUpdating, item);
+            result = base.Update(item);
+            if (!result.HasViolation)
+            {
+                _eventManager.Trigger(Events.OnArticleUpdated, item);
+            }
+            return result;
+        }
+
+        public override void Remove(ArticleEntity item)
+        {
+            _eventManager.Trigger(Events.OnArticleDeleting, item);
+            base.Remove(item);
+            _eventManager.Trigger(Events.OnArticleDeleted, item);
+        }
+        public override void RemoveRange(params ArticleEntity[] items)
+        {
+            items.Each(item => _eventManager.Trigger(Events.OnArticleDeleting, item));
+            base.RemoveRange(items);
+            items.Each(item => _eventManager.Trigger(Events.OnArticleDeleted, item));
         }
         public ArticleEntity GetByUrl(string url)
         {
@@ -69,10 +106,26 @@ namespace ZKEACMS.Article.Service
 
         public void Publish(int ID)
         {
-            var article = Get(ID);
+            Publish(Get(ID));
+        }
+
+        public void Publish(ArticleEntity article)
+        {
             article.IsPublish = true;
-            article.PublishDate = DateTime.Now;
-            Update(article);
+            if (article.PublishDate == null)
+            {
+                article.PublishDate = DateTime.Now;
+            }            
+            if (article.ID > 0)
+            {
+                Update(article);
+                _eventManager.Trigger(Events.OnArticlePublished, article);
+            }
+        }
+
+        public ArticleEntity GetLatestPublished()
+        {
+            return Get().Where(m => m.Status == (int)RecordStatus.Active && m.IsPublish).OrderByDescending(m => m.ID).Take(1).ToList().FirstOrDefault();
         }
     }
 }

@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using ZKEACMS.Common.Models;
 using Easy.Constant;
 using Easy.Extend;
@@ -18,7 +21,7 @@ namespace ZKEACMS.Common.Service
 
         public override ServiceResult<CarouselItemEntity> Add(CarouselItemEntity item)
         {
-            if (item.ActionType != ActionType.Unattached)
+            if (!item.ActionType.HasFlag(ActionType.UnAttach))
             {
                 return base.Add(item);
             }
@@ -26,20 +29,20 @@ namespace ZKEACMS.Common.Service
         }
         public override ServiceResult<CarouselItemEntity> Update(CarouselItemEntity item)
         {
-            if (item.ActionType == ActionType.Update)
+            if (item.ActionType.HasFlag(ActionType.Update))
             {
                 return base.Update(item);
             }
-            else if (item.ActionType == ActionType.Create)
+            else if (item.ActionType.HasFlag(ActionType.Create))
             {
                 return base.Add(item);
             }
-            else if (item.ActionType == ActionType.Delete)
+            else if (item.ActionType.HasFlag(ActionType.Delete))
             {
                 if (item.ID > 0)
                 {
                     Remove(item);
-                }                
+                }
             }
             return new ServiceResult<CarouselItemEntity>();
         }

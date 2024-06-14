@@ -1,9 +1,6 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2017 ZKEASOFT
- * 深圳市纸壳软件有限公司
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using Easy.Constant;
 using Easy.MetaData;
@@ -15,7 +12,7 @@ namespace ZKEACMS.MetaData
     public abstract class WidgetMetaData<T> : ViewMetaData<T> where T : WidgetBase
     {
         int orderStart;
-       
+
         protected int NextOrder()
         {
             return ++orderStart;
@@ -28,12 +25,11 @@ namespace ZKEACMS.MetaData
             ViewConfig(m => m.IsSystem).AsHidden();
             ViewConfig(m => m.ServiceTypeName).AsHidden().Required();
             ViewConfig(m => m.ViewModelTypeName).AsHidden().Required();
-            ViewConfig(m => m.PartialView).AsHidden().Required();
-            ViewConfig(m => m.LayoutID).AsHidden();
-            ViewConfig(m => m.PageID).AsHidden();
+            ViewConfig(m => m.PartialView).AsDropDownList().AsWidgetTemplateChooser();
+            ViewConfig(m => m.LayoutId).AsHidden();
+            ViewConfig(m => m.PageId).AsHidden();
             ViewConfig(m => m.RuleID).AsHidden();
             ViewConfig(m => m.ExtendData).AsHidden();
-            ViewConfig(m => m.Status).AsHidden();
             ViewConfig(m => m.Description).AsHidden();
             ViewConfig(m => m.CustomClass).AsHidden().Ignore();
             ViewConfig(m => m.CustomStyle).AsHidden().Ignore();
@@ -42,13 +38,17 @@ namespace ZKEACMS.MetaData
 
             ViewConfig(m => m.WidgetName).AsTextBox().Order(NextOrder()).Required();
             ViewConfig(m => m.Title).AsTextBox().Order(NextOrder());
-            ViewConfig(m => m.Position).AsTextBox().Order(NextOrder()).RegularExpression(RegularExpression.Integer,"请输入数字").Required();
-            ViewConfig(m => m.ZoneID).AsDropDownList().Order(NextOrder()).DataSource(ViewDataKeys.Zones, SourceType.ViewData).Required();            
+            ViewConfig(m => m.Position).AsTextBox().Order(NextOrder()).RegularExpression(RegularExpression.Integer).Required();
+            ViewConfig(m => m.ZoneId).AsDropDownList().Order(NextOrder()).DataSource(ViewDataKeys.Zones, SourceType.ViewData).Required();
+            ViewConfig(m => m.Status).AsDropDownList().DataSource(DictionaryKeys.WidgetStatus, SourceType.Dictionary).Order(NextOrder()).Required();
             ViewConfig(m => m.IsTemplate).AsCheckBox().Order(NextOrder());
             ViewConfig(m => m.Thumbnail).AsTextBox().Order(NextOrder()).MediaSelector();
-            ViewConfig(m => m.StyleClass).AsTextBox().Order(NextOrder()).AddClass(StringKeys.StyleEditor).AddProperty("data-url", Urls.StyleEditor).AddProperty("data-width", "1024").MaxLength(1000);
-        
-            
+            ViewConfig(m => m.StyleClass).AsTextBox()
+                .Order(NextOrder())
+                .AddClass(StringKeys.StyleEditor)
+                .AddProperty("data-url", Urls.StyleEditor)
+                .AddProperty("data-width", "1024")
+                .MaxLength(1000);
         }
 
         protected override void ViewConfigure()

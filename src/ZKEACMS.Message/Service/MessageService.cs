@@ -1,14 +1,14 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2018 ZKEASOFT
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using Easy;
+using Easy.Constant;
 using Easy.Extend;
 using Easy.Notification;
 using Easy.RepositoryPattern;
 using System;
+using ZKEACMS.Event;
 using ZKEACMS.Message.Models;
 using ZKEACMS.Setting;
 
@@ -16,27 +16,18 @@ namespace ZKEACMS.Message.Service
 {
     public class MessageService : ServiceBase<MessageEntity, CMSDbContext>, IMessageService
     {
-        private readonly INotificationManager _notificationManager;
-        private readonly IApplicationSettingService _applicationSettingService;
-        public MessageService(IApplicationContext applicationContext, INotificationManager notificationManager, IApplicationSettingService applicationSettingService, CMSDbContext dbContext)
+        private readonly IEventManager _eventManager;
+        public MessageService(IApplicationContext applicationContext, CMSDbContext dbContext, IEventManager eventManager)
             : base(applicationContext, dbContext)
         {
-            _notificationManager = notificationManager;
-            _applicationSettingService = applicationSettingService;
+            _eventManager = eventManager;
         }
         public override ServiceResult<MessageEntity> Add(MessageEntity item)
         {
             ServiceResult<MessageEntity> result = base.Add(item);
-            MessageNotificationConfig notifyConfig = _applicationSettingService.Get<MessageNotificationConfig>();
-            if (notifyConfig.MessageNotifyEmails.IsNotNullAndWhiteSpace())
+            if (!result.HasViolation && item.ActionType == ActionType.Continue)
             {
-                _notificationManager.Send(new RazorEmailNotice
-                {
-                    Subject = "新的留言提醒",
-                    To = notifyConfig.MessageNotifyEmails.Split(new char[] { '\r', '\n', ',', ';' }, StringSplitOptions.RemoveEmptyEntries),
-                    Model = item,
-                    TemplatePath = "~/wwwroot/Plugins/ZKEACMS.Message/EmailTemplates/MessageNotification.cshtml"
-                });
+                _eventManager.Trigger(Events.OnMessageSubmitted, item);
             }
             return result;
         }

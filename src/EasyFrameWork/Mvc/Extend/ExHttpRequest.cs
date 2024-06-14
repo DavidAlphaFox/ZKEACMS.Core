@@ -1,8 +1,7 @@
-/* 
- * http://www.zkea.net/ 
- * Copyright 2016 ZKEASOFT 
- * http://www.zkea.net/licenses 
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
 using Easy.Storage;
 using Easy.Extend;
@@ -17,9 +16,13 @@ namespace Easy.Mvc.Extend
     {
         public static string MapPath(this HttpRequest request, string path)
         {
-            var environment = request.HttpContext.RequestServices.GetService<IHostingEnvironment>();
-            path = path.Replace("~/", "").Trim('/').Trim('\\');
-            return Path.Combine(environment.WebRootPath, path.ToFilePath());
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new ArgumentException($"\"{nameof(path)}\" can not be null.", nameof(path));
+            }
+
+            var environment = request.HttpContext.RequestServices.GetService<IWebHostEnvironment>();
+            return Path.Combine(environment.WebRootPath, path.TrimStart('~').TrimStart('/').ToFilePath());
         }
         /// <summary>
         /// 保存图片到UpLoad/Images
@@ -35,7 +38,11 @@ namespace Easy.Mvc.Extend
                 if (Common.IsImage(ext))
                 {
                     IStorage storage = request.HttpContext.RequestServices.GetService<IStorage>();
-                    return storage.SaveFile(request.Form.Files[0].OpenReadStream(), string.Format("{0}{1}", Guid.NewGuid().ToString("N"), ext));
+                    using (Stream stream = request.Form.Files[0].OpenReadStream())
+                    {
+                        return storage.SaveFile(stream, string.Format("{0}{1}", new Easy.IDGenerator().CreateStringId(), ext));
+                    }
+
                 }
             }
             return string.Empty;
@@ -51,12 +58,14 @@ namespace Easy.Mvc.Extend
             {
                 string fileName = request.Form.Files[0].FileName;
                 string ext = Path.GetExtension(fileName);
-                if (Common.FileCanUp(ext))
-                {
-                    IStorage storage = request.HttpContext.RequestServices.GetService<IStorage>();
-                    return storage.SaveFile(request.Form.Files[0].OpenReadStream(), string.Format("{0}{1}", Guid.NewGuid().ToString("N"), ext));
+                if (Common.IsExecuteableFile(ext)) return string.Empty;
 
+                IStorage storage = request.HttpContext.RequestServices.GetService<IStorage>();
+                using (Stream stream = request.Form.Files[0].OpenReadStream())
+                {
+                    return storage.SaveFile(stream, string.Format("{0}{1}", new Easy.IDGenerator().CreateStringId(), ext));
                 }
+
             }
             return string.Empty;
         }
@@ -76,11 +85,9 @@ namespace Easy.Mvc.Extend
         }
         public static string GetReferer(this HttpRequest request)
         {
-            return request.Headers["Referer"].ToString();
-        }
-        public static string GetHostWithScheme(this HttpRequest request)
-        {
-            return request.Scheme + "://" + request.Host;
+            string uri = request.Headers["Referer"].ToString();
+            if (uri.IsNotNullAndWhiteSpace() && !Uri.TryCreate(uri, UriKind.Absolute, out _)) return null;
+            return uri;
         }
     }
 }

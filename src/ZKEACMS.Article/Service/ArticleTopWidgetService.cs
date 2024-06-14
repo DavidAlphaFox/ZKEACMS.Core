@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy;
 using Easy.RepositoryPattern;
 using Microsoft.AspNetCore.Http;
@@ -26,16 +29,16 @@ namespace ZKEACMS.Article.Service
             _articleTypeService = articleTypeService;
         }
 
-        public override WidgetViewModelPart Display(WidgetBase widget, ActionContext actionContext)
+        public override object Display(WidgetDisplayContext widgetDisplayContext)
         {
-            var currentWidget = widget as ArticleTopWidget;
+            var currentWidget = widgetDisplayContext.Widget as ArticleTopWidget;
             var viewModel = new ArticleTopWidgetViewModel
             {
                 Widget = currentWidget
             };
             var categoryIds = _articleTypeService.Get(m => m.ID == currentWidget.ArticleTypeID || m.ParentID == currentWidget.ArticleTypeID).Select(m => m.ID);
             viewModel.Articles = _articleService.Get(m => m.IsPublish && categoryIds.Contains(m.ArticleTypeID ?? 0)).OrderByDescending(m => m.PublishDate).Take(currentWidget.Tops ?? 10);
-            return widget.ToWidgetViewModelPart(viewModel);
+            return viewModel;
         }
     }
 }

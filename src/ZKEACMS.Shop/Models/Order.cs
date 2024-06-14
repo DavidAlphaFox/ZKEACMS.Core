@@ -1,8 +1,7 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2017 ZKEASOFT
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.MetaData;
 using Easy.Models;
 using Easy.RepositoryPattern;
@@ -42,16 +41,19 @@ namespace ZKEACMS.Shop.Models
         {
             switch ((Shop.OrderStatus)OrderStatus)
             {
-                case Shop.OrderStatus.Cancel: return "已取消";
-                case Shop.OrderStatus.Complete: return "完成";
-                case Shop.OrderStatus.Paid: return "已付款";
-                case Shop.OrderStatus.Refund: return "已退款";
-                case Shop.OrderStatus.Shiped: return "已发货";
-                case Shop.OrderStatus.UnPaid: return "未支付";
-                case Shop.OrderStatus.Refunding: return "退款中";
+                case Shop.OrderStatus.Cancel: return "Cancel";
+                case Shop.OrderStatus.Complete: return "Complete";
+                case Shop.OrderStatus.Paid: return "Paid";
+                case Shop.OrderStatus.Refund: return "Refund";
+                case Shop.OrderStatus.Shiped: return "Shiped";
+                case Shop.OrderStatus.UnPaid: return "UnPaid";
+                case Shop.OrderStatus.Refunding: return "Refunding";
             }
-            return "完成";
+            return "Complete";
         }
+
+        [NotMapped]
+        public IEnumerable<OrderItem> OrderItems { get; set; }
     }
     class OrderMetaData : ViewMetaData<Order>
     {
@@ -76,6 +78,7 @@ namespace ZKEACMS.Shop.Models
             ViewConfig(m => m.Refund).AsTextBox().RegularExpression(Easy.Constant.RegularExpression.Float);
             ViewConfig(m => m.RefundReason).AsTextBox();
             ViewConfig(m => m.RefundDate).AsTextBox().ReadOnly();
+            ViewConfig(m => m.OrderItems).AsHidden().Ignore();
         }
     }
 }

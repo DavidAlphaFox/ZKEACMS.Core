@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -59,7 +62,7 @@ namespace ZKEACMS.SectionWidget.Service
                                     var name = property.Attributes["name"];
                                     if (name != null && name.Value.IsNotNullAndWhiteSpace() && property.InnerText.IsNotNullAndWhiteSpace())
                                     {
-                                        ClassAction.SetObjPropertyValue(content, name.Value, property.InnerText);
+                                        PropertyHelper.SetValue(content, name.Value, property.InnerText);
                                     }
                                 }
                                 content.SectionGroupId = group.ID;

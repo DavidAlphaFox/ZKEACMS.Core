@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,7 +22,7 @@ namespace ZKEACMS.Controllers
 
         public IActionResult NotFond()
         {
-            var result = View("NotFond");
+            var result = View("NotFound");
             result.StatusCode = 404;
             return result;
         }
@@ -32,15 +35,13 @@ namespace ZKEACMS.Controllers
         }
         public IActionResult Code(int code)
         {
-            if (code == 404)
+            switch (code)
             {
-                return NotFond();
+                case 404: return NotFond();
+                case 403: return Forbidden();
+                case 401: return Unauthorized();
+                default: return Index(code);
             }
-            else if (code == 403)
-            {
-                return Forbidden();
-            }
-            return Index(code);
         }
     }
 }

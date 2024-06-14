@@ -1,6 +1,8 @@
 /* http://www.zkea.net/ 
  * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
+using Easy.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +15,7 @@ namespace ZKEACMS.Common.Service
         IEnumerable<FileInfo> Get();
         void Delete(string id);
         void DeleteAll();
-        string ReadLog(string id);
+        Stream GetStream(string id);
+        IEnumerable<LogEntry> Take(string id, long position, int take);
     }
 }

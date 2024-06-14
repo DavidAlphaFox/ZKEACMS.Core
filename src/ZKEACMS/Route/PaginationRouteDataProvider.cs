@@ -1,9 +1,6 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2018 ZKEASOFT
- * 深圳市纸壳软件有限公司
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using System;
 using System.Collections.Generic;
@@ -17,10 +14,10 @@ namespace ZKEACMS.Route
         public int Order { get { return 1; } }
         public string ExtractVirtualPath(string path, RouteValueDictionary values)
         {
-            if (CustomRegex.PageRegex.IsMatch(path))
+            if (CustomRegex.PageIndex().IsMatch(path))
             {
                 int page = -1;
-                path = CustomRegex.PageRegex.Replace(path, evaluator =>
+                path = CustomRegex.PageIndex().Replace(path, evaluator =>
                 {
                     int.TryParse(evaluator.Groups[1].Value, out page);
                     return string.Empty;

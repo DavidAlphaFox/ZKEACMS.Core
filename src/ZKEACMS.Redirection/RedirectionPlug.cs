@@ -1,7 +1,7 @@
 /* http://www.zkea.net/ 
- * Copyright 2017 ZKEASOFT 
- * http://www.zkea.net/licenses 
- */
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy;
 using Easy.Extend;
 using Easy.Mvc.Resource;
@@ -27,7 +27,7 @@ namespace ZKEACMS.Redirection
                 Template = "{*path}",
                 Defaults = new { controller = "UrlRedirection", action = "RedirectTo" },
                 Constraints = new { path = new RedirectRouteConstraint() },
-                Priority = 0
+                Priority = int.MaxValue
             };
         }
 
@@ -35,9 +35,9 @@ namespace ZKEACMS.Redirection
         {
             yield return new AdminMenu
             {
-                Group = "系统",
-                Title = "URL重定向",
-                Url = "~/Admin/UrlRedirection",
+                Group = "System",
+                Title = "Url Redirect",
+                Url = "~/admin/urlredirection",
                 Icon = "glyphicon-random",
                 Order = 12,
                 PermissionKey = PermissionKeys.ViewUrlRedirect
@@ -58,16 +58,16 @@ namespace ZKEACMS.Redirection
         {
             yield return new PermissionDescriptor
             {
-                Module = "设置",
-                Title = "查看URL重定向",
-                Description = "查看重定向",
+                Module = "Setting",
+                Title = "View URL Redirection",
+                Description = "View URL Redirection",
                 Key = PermissionKeys.ViewUrlRedirect
             };
             yield return new PermissionDescriptor
             {
-                Module = "设置",
-                Title = "管理URL重定向",
-                Description = "管理重定向",
+                Module = "Setting",
+                Title = "Manage URL Redirection",
+                Description = "Manage URL Redirection",
                 Key = PermissionKeys.ManageUrlRedirect
             };
         }
@@ -84,7 +84,6 @@ namespace ZKEACMS.Redirection
             serviceCollection.TryAddTransient<IUrlRedirectService, UrlRedirectService>();
 
             serviceCollection.ConfigureMetaData<UrlRedirect, UrlRedirectMetaData>();
-            serviceCollection.ConfigureCache<IEnumerable<UrlRedirect>>();
         }
     }
 }

@@ -1,5 +1,5 @@
 /* http://www.zkea.net/ 
- * Copyright 2016 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
 
 using Easy.Constant;
@@ -20,8 +20,9 @@ using ZKEACMS.Page;
 using ZKEACMS.Setting;
 using ZKEACMS.Widget;
 using ZKEACMS.Rule;
-using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.Extensions.DependencyInjection;
+using ZKEACMS.Event;
+using Easy;
 
 namespace ZKEACMS.Controllers
 {
@@ -30,6 +31,7 @@ namespace ZKEACMS.Controllers
         public PageController(IPageService service)
             : base(service)
         {
+
         }
 
         [Widget]
@@ -108,8 +110,10 @@ namespace ZKEACMS.Controllers
             }
             ViewBag.OldVersions = Service.Get(m => m.ReferencePageID == page.ID && m.IsPublishedPage == true).OrderBy(m => m.PublishDate);
             ViewBag.Page = page;
-            return View(page);
+            return View("Edit", page);
         }
+
+
         [HttpPost, DefaultAuthorize(Policy = PermissionKeys.ManagePage)]
         public override IActionResult Edit(PageEntity entity)
         {
@@ -129,21 +133,30 @@ namespace ZKEACMS.Controllers
                 ModelState.AddModelError("PageUrl", ex.Message);
                 return View(entity);
             }
-            if (entity.ActionType == ActionType.Design)
+            if (entity.ActionType.HasFlag(ActionType.Exit))
+            {
+                return RedirectToAction("Index", new { PageId = entity.ID });
+            }
+            if (entity.ActionType.HasFlag(ActionType.Design))
             {
                 return RedirectToAction("Design", new { entity.ID });
             }
-            else if (entity.ActionType == ActionType.Delete)
+            else if (entity.ActionType.HasFlag(ActionType.Delete))
             {
                 Service.Remove(entity);
                 return RedirectToAction("Index");
             }
-            else if (entity.ActionType == ActionType.Publish)
+            else if (entity.ActionType.HasFlag(ActionType.Publish))
             {
-                Service.Publish(entity);
+                var result = Service.Publish(entity);
+                if (result.HasViolation)
+                {
+                    ModelState.AddUnknownError(result.ErrorMessage);
+                    return View(entity);
+                }
                 return RedirectView(entity.ID, false);
             }
-            return RedirectToAction("Index", new { PageID = entity.ID });
+            return RedirectToAction("Edit", new { Id = entity.ID });
         }
         [EditWidget, DefaultAuthorize(Policy = PermissionKeys.ManagePage)]
         public IActionResult Design(string ID)
@@ -196,15 +209,15 @@ namespace ZKEACMS.Controllers
         {
             ILayoutService layoutService = HttpContext.RequestServices.GetService<ILayoutService>();
             IWidgetBasePartService widgetBasePartService = HttpContext.RequestServices.GetService<IWidgetBasePartService>();
-            IRuleService ruleService= HttpContext.RequestServices.GetService<IRuleService>();
-            var page = Service.Get(context.PageID);
+            IRuleService ruleService = HttpContext.RequestServices.GetService<IRuleService>();
+            var page = Service.Get(context.PageId);
             var layout = layoutService.GetByPage(page);
             var viewModel = new LayoutZonesViewModel
             {
                 Page = page,
                 Layout = layout,
-                PageID = context.PageID,
-                LayoutID = layout.ID,
+                PageId = context.PageId,
+                LayoutId = layout.ID,
                 Zones = layout.Zones,
                 Widgets = widgetBasePartService.GetAllByPage(page),
                 LayoutHtml = layout.Html
@@ -216,14 +229,15 @@ namespace ZKEACMS.Controllers
             });
             if (rules.Any())
             {
+                var ruleDic = rules.ToDictionary(m => m.RuleID, m => m);
                 var rulesID = rules.Select(m => m.RuleID).ToArray();
                 var ruleWidgets = widgetBasePartService.GetAllByRule(rulesID);
                 ruleWidgets.Each(widget =>
                 {
-                    var zone = layout.Zones.FirstOrDefault(z => z.ZoneName == rules.First(m => m.RuleID == widget.RuleID).ZoneName);
-                    if (zone != null)
+                    var availableZones = layout.Zones.Where(z => ruleDic[widget.RuleID.Value].ZoneNames.Contains(z.ZoneName));
+                    foreach (var item in availableZones)
                     {
-                        widget.ZoneID = zone.HeadingCode;
+                        widget.SetZone(item.HeadingCode);
                     }
                 });
                 viewModel.Widgets = viewModel.Widgets.Concat(ruleWidgets);
@@ -241,14 +255,24 @@ namespace ZKEACMS.Controllers
         [HttpPost, DefaultAuthorize(Policy = PermissionKeys.ManagePage)]
         public JsonResult Publish(string id)
         {
-            Service.Publish(Service.Get(id));
-            return Json(true);
+            var result = Service.Publish(Service.Get(id));
+            return Json(result);
         }
         [DefaultAuthorize(Policy = PermissionKeys.ManagePage)]
-        public RedirectResult PublishPage(string ID, string ReturnUrl)
+        public IActionResult PublishPage(string ID, string ReturnUrl)
         {
-            Service.Publish(Service.Get(ID));
+            var result = Service.Publish(Service.Get(ID));
+            if (result.HasViolation)
+            {
+                ModelState.AddUnknownError(result.ErrorMessage);
+                return Edit(ID);
+            }
             return Redirect(ReturnUrl);
+        }
+        [DefaultAuthorize(Policy = PermissionKeys.ManagePage)]
+        public IActionResult ChangeUrl(string ID)
+        {
+            return View(Service.Get(ID));
         }
     }
 }

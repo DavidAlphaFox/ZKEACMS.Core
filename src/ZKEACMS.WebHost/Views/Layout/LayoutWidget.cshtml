@@ -8,21 +8,21 @@
         <div class="col-md-4">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    @L("布局组件")
+                    @L("Layout Content")
                 </div>
                 <div class="panel-body">
                     <ul id="layouts" class="fullRowList">
                         @foreach (LayoutEntity item in Model)
                         {
-                            <li id="@item.ID" class="clearfix" data-id="@item.ID">
+                            <li id="@item.ID" class="clearfix muted" data-id="@item.ID">
                                 <div class="pull-left">
                                     <i class="glyphicon glyphicon-equalizer"></i> @item.LayoutName
                                 </div>
                                 @if (Authorizer.Authorize(PermissionKeys.ManageLayout))
                                 {
                                     <div class="pull-right">
-                                        <a href="@Url.Action("Design", new {item.ID})" title="@L("设计")">
-                                            <i class="glyphicon glyphicon-edit"></i>
+                                        <a href="@Url.Action("Design", new {item.ID})" title="@L("Design")">
+                                            <img class="icon" src="~/images/icons/edit.svg" />
                                         </a>
                                     </div>
                                 }
@@ -43,7 +43,7 @@
     <script type="text/javascript">
         $(function () {            
             if (!location.hash) {
-                location.hash = '@ViewBag.LayoutID';
+                location.hash = '@ViewBag.LayoutId';
             }
             if (location.hash && location.hash != "#") {
                 $("li" + location.hash).trigger("click");
@@ -55,10 +55,12 @@
 
         $(document).on("click", ".fullRowList .delete", function () {
             var id = $(this).data("widgetid");
-            if (confirm("@L("确定要删除该组件吗？")")) {
-                $.post("@Url.Action("DeleteWidget", "Widget")", { ID: id }, function (data) {
-                    if (data) {
+            if (confirm("@L("Do you want to delete?")")) {
+                $.post("@Url.Action("DeleteWidget", "Widget")", { ID: id, permanent: true }, function (data) {
+                    if (data.actionType == @((int)ActionType.Delete)) {
                         $("#widget_" + id).remove();
+                    } else if (data.actionType == @((int)ActionType.Update)) {
+                        $("#widget_" + id).addClass("disabled");
                     }
                 }, "json");
             }

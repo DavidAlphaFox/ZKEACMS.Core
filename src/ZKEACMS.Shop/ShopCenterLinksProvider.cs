@@ -1,3 +1,7 @@
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +14,13 @@ namespace ZKEACMS.Shop
     {
         public IEnumerable<AdminMenu> GetLinks()
         {
-            yield return new AdminMenu { Order = 1, Title = "我的订单", Url = "~/MyOrder" };
+            yield return new AdminMenu
+            {
+                PluginName = PluginBase.GetName<ShopPlug>(),
+                Order = 1,
+                Title = "My Order",
+                Url = "~/myorder"
+            };
         }
     }
 }

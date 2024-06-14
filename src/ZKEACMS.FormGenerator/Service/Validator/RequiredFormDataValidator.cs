@@ -1,3 +1,7 @@
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +24,7 @@ namespace ZKEACMS.FormGenerator.Service.Validator
             message = string.Empty;
             if (field.IsRequired && data.FieldValue.IsNullOrWhiteSpace() && data.OptionValue.IsNullOrWhiteSpace())
             {
-                message = _localize.Get("{0}是必填的").FormatWith(field.DisplayName);
+                message = field.RequiredMessage ?? _localize.Get("{0} is required").FormatWith(field.DisplayName);
                 return false;
             }
             return true;

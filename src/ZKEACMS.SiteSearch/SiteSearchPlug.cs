@@ -1,8 +1,7 @@
 /* http://www.zkea.net/ 
- * Copyright 2017 ZKEASOFT 
- * http://www.zkea.net/licenses 
- *
- */
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.Mvc.Resource;
 using Easy.Mvc.Route;
 using System;
@@ -32,11 +31,12 @@ namespace ZKEACMS.SiteSearch
 
         protected override void InitScript(Func<string, ResourceHelper> script)
         {
-
+            script("site-search").Include("~/Plugins/ZKEACMS.SiteSearch/Content/site-search.js", "~/Plugins/ZKEACMS.SiteSearch/Content/site-search.min.js");
         }
 
         protected override void InitStyle(Func<string, ResourceHelper> style)
         {
+            style("site-search").Include("~/Plugins/ZKEACMS.SiteSearch/Content/site-search.css", "~/Plugins/ZKEACMS.SiteSearch/Content/site-search.min.css");
         }
 
         public override IEnumerable<PermissionDescriptor> RegistPermission()
@@ -48,8 +48,8 @@ namespace ZKEACMS.SiteSearch
         {
             yield return new WidgetTemplateEntity<SiteSearchWidgetService>
             {
-                Title = "站点搜索",
-                GroupName = "6.搜索",
+                Title = "Search Engine Search",
+                GroupName = "6.Search",
                 PartialView = "Widget.SiteSearch",
                 Thumbnail = "~/Plugins/ZKEACMS.SiteSearch/Content/Widget.SiteSearch.png",
                 Order = 1

@@ -1,3 +1,7 @@
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Microsoft.AspNetCore.Routing;
 using System;
 using System.Collections.Generic;
@@ -6,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using ZKEACMS.Redirection.Service;
 using Microsoft.Extensions.DependencyInjection;
+using ZKEACMS.Redirection.Models;
 
 namespace ZKEACMS.Redirection
 {
@@ -20,12 +25,13 @@ namespace ZKEACMS.Redirection
             {
                 path = path.TrimEnd('/');
             }
-            if (path.IndexOf(".html", StringComparison.OrdinalIgnoreCase) < 0 && CustomRegex.PostIdRegex.IsMatch(path))
+            if (path.IndexOf(".html", StringComparison.OrdinalIgnoreCase) < 0 && CustomRegex.PostId().IsMatch(path))
             {
                 return true;
             }
-            var redirect = httpContext.RequestServices.GetService<IUrlRedirectService>().GetAll().Count(m => m.Status == (int)Easy.Constant.RecordStatus.Active && m.InComingUrl == path && m.InComingUrl != m.DestinationURL);
-            return redirect > 0;
+            UrlRedirect redirect = httpContext.RequestServices.GetService<IUrlRedirectService>().GetMatchedRedirection(path);
+
+            return redirect != null;
         }
     }
 }

@@ -1,11 +1,13 @@
 /* http://www.zkea.net/ 
  * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using Easy.Mvc.Route;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ZKEACMS.Route;
 
 namespace ZKEACMS
 {
@@ -17,36 +19,51 @@ namespace ZKEACMS
              {
                 RouteName = "pageRoute",
                 Template = "{*path}",
-                Defaults = new { controller = "Page", action = "Main" },
+                Defaults = new { controller = "page", action = "main" },
                 Constraints = new { path = new PageRouteConstraint() },
                 Priority = -1
              },
              new RouteDescriptor
              {
                 RouteName = "admin",
-                Template = "admin/{controller=Dashboard}/{action=index}/{id?}",
+                Template = "admin/{controller=dashboard}/{action=index}/{id?}",
                 Defaults=new { module = "admin" },
                 Priority = 10
              },
              new RouteDescriptor
              {
-                RouteName = "Validation",
-                Template = "validation/{action}",
-                Defaults = new { controller = "Validation" },
+                RouteName = "Captcha",
+                Template = "captcha/{action}",
+                Defaults = new { controller = "captcha" },
+                Priority = 11
+             },
+             new RouteDescriptor
+             {
+                RouteName = "Antiforgery",
+                Template = "js/antiforgery/tokenset.js",
+                Defaults = new { controller = "Antiforgery",action="GetTokenSet" },
+                Priority = 11
+             },
+             new RouteDescriptor
+             {
+                RouteName = "AntiforgeryRequest",
+                Template = "js/antiforgery/getrequesttoken",
+                Defaults = new { controller = "Antiforgery",action="GetRequestToken" },
                 Priority = 11
              },
              new RouteDescriptor
              {
                 RouteName = "error",
                 Template = "error/{action}/{code?}",
-                Defaults = new { controller = "Error", action = "index" },
+                Defaults = new { controller = "error", action = "index" },
                 Priority = 11
              },
              new RouteDescriptor
              {
                 RouteName = "AccountAdmin",
-                Template = "Account/{action}",
-                Defaults = new { controller = "Account", action = "Index"},
+                Template = "account/{action}",
+                Defaults = new { controller = "account", action = "index"},
+                Constraints = new { action = new AccountRouteConstraint() },
                 Priority = 11
              }
         };

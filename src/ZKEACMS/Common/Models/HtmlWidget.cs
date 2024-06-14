@@ -1,5 +1,5 @@
 /* http://www.zkea.net/ 
- * Copyright 2017 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
 
 using Easy.MetaData;
@@ -20,6 +20,8 @@ namespace ZKEACMS.Common.Models
         protected override void ViewConfigure()
         {
             base.ViewConfigure();
+            ViewConfig(m => m.Title).AsHidden();
+            ViewConfig(m => m.PartialView).AsHidden();
             ViewConfig(m => m.HTML).AsTextArea().AddClass("html").Order(NextOrder());
         }
     }

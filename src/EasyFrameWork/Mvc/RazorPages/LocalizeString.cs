@@ -1,6 +1,7 @@
 /* http://www.zkea.net/ 
- * Copyright 2018 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -13,6 +14,7 @@ using Easy.Modules.MutiLanguage;
 using Easy.Options;
 using Microsoft.Extensions.Options;
 using Easy.Extend;
+using System.Linq;
 
 namespace Easy.Mvc.RazorPages
 {
@@ -26,40 +28,35 @@ namespace Easy.Mvc.RazorPages
         public LocalizeString(string content, string cultureCode, HttpContext httpContext)
         {
             Content = content;
-            _cultureCode = cultureCode;
+            CultureCode = cultureCode;
             _httpContext = httpContext;
         }
         private string _translatedContent;
         public string Content { get; set; }
-        private string _cultureCode;
-        public string CultureCode
-        {
-            get
-            {
-                return _cultureCode ?? (_cultureCode = _httpContext.RequestServices.GetService<IOptions<CultureOption>>().Value.Code);
-            }
-        }
+
+
+        public string CultureCode { get; set; }
         public string Text { get { return Get(); } }
         private HttpContext _httpContext;
         public void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
             writer.Write(Get());
         }
+
         private string Get()
         {
             if (_translatedContent.IsNotNullAndWhiteSpace())
             {
                 return _translatedContent;
             }
-            var service = _httpContext.RequestServices.GetService<ILanguageService>();
-            var lanContent = service.Get(Content, CultureCode);
-            if (lanContent != null && lanContent.LanValue.IsNotNullAndWhiteSpace())
+            var localize = _httpContext.RequestServices.GetService<ILocalize>();
+            if (CultureCode.IsNotNullAndWhiteSpace())
             {
-                _translatedContent = lanContent.LanValue;
+                _translatedContent = localize.Get(Content, CultureCode);
             }
-            if (_translatedContent.IsNullOrWhiteSpace())
+            else
             {
-                _translatedContent = Content;
+                _translatedContent = localize.Get(Content);
             }
             return _translatedContent;
         }

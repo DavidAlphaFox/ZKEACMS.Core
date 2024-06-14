@@ -1,5 +1,6 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
-
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using Easy.Constant;
 using Easy.Extend;
@@ -43,11 +44,11 @@ namespace ZKEACMS.Product.Controllers
         [HttpPost, DefaultAuthorize(Policy = PermissionKeys.ManageProduct)]
         public override IActionResult Create(ProductEntity entity)
         {
-            var result = base.Create(entity);
-            if (entity.ActionType == ActionType.Publish)
+            if (entity.ActionType.HasFlag(ActionType.Publish) && _authorizer.Authorize(PermissionKeys.PublishProduct))
             {
-                Service.Publish(entity.ID);
+                Service.Publish(entity);
             }
+            var result = base.Create(entity);
             return result;
         }
         [DefaultAuthorize(Policy = PermissionKeys.ManageProduct)]
@@ -59,9 +60,9 @@ namespace ZKEACMS.Product.Controllers
         public override IActionResult Edit(ProductEntity entity)
         {
             var result = base.Edit(entity);
-            if (entity.ActionType == ActionType.Publish && _authorizer.Authorize(PermissionKeys.PublishProduct))
+            if (entity.ActionType.HasFlag(ActionType.Publish) && _authorizer.Authorize(PermissionKeys.PublishProduct))
             {
-                Service.Publish(entity.ID);
+                Service.Publish(entity);
             }
             if (Request.Query["ReturnUrl"].Count > 0)
             {
@@ -99,7 +100,7 @@ namespace ZKEACMS.Product.Controllers
                         Service.Update(product);
                     }
                 });
-                Service.SaveChanges();
+                Service.EndBulkSave();
             }
             return Json(new AjaxResult { Status = AjaxStatus.Normal });
         }
@@ -123,6 +124,12 @@ namespace ZKEACMS.Product.Controllers
                 }
             }
             return View(new ProductTagViewModel { ProductTags = tags });
+        }
+
+        [DefaultAuthorize(Policy = PermissionKeys.ViewProduct)]
+        public IActionResult Select()
+        {
+            return View();
         }
     }
 }

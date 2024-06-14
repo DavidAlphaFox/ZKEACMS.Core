@@ -1,3 +1,7 @@
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.LINQ;
 using Easy.MetaData;
 using Easy.Models;
@@ -9,6 +13,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 using ZKEACMS.Extend;
+using System.Text.RegularExpressions;
 
 namespace ZKEACMS.Redirection.Models
 {
@@ -20,6 +25,44 @@ namespace ZKEACMS.Redirection.Models
         public string InComingUrl { get; set; }
         public string DestinationURL { get; set; }
         public bool IsPermanent { get; set; }
+        public bool? IsPattern { get; set; }
+        private Regex _regex;
+        public bool IsMatch(string path)
+        {
+            if (IsPattern ?? false)
+            {
+                if (_regex == null)
+                {
+                    ParsePattern();
+                }
+                return _regex.IsMatch(path);
+            }
+
+            return path.Equals(InComingUrl, StringComparison.OrdinalIgnoreCase);
+        }
+        public void ParsePattern()
+        {
+            if (!string.IsNullOrEmpty(InComingUrl))
+            {
+                _regex = new Regex(InComingUrl, RegexOptions.IgnoreCase);
+            }
+        }
+        public string GetDestinationURL(string inComingUrl)
+        {
+            if (IsPattern ?? false && IsPatternDestination())
+            {
+                return _regex.Replace(inComingUrl, DestinationURL);
+            }
+            return DestinationURL;
+        }
+        private bool IsPatternDestination()
+        {
+            for (int i = 0; i < DestinationURL.Length; i++)
+            {
+                if (i < (DestinationURL.Length - 1) && DestinationURL[i] == '$' && char.IsDigit(DestinationURL[i + 1])) return true;
+            }
+            return false;
+        }
     }
     class UrlRedirectMetaData : ViewMetaData<UrlRedirect>
     {
@@ -28,7 +71,9 @@ namespace ZKEACMS.Redirection.Models
             ViewConfig(m => m.ID).AsHidden();
             ViewConfig(m => m.Title).AsTextBox().Order(0).Required().MaxLength(200).ShowInGrid().Search(Query.Operators.Contains);
             ViewConfig(m => m.InComingUrl).AsTextBox().Order(1).Required().MaxLength(500).PageSelector().ShowInGrid().Search(Query.Operators.Contains);
-            ViewConfig(m => m.DestinationURL).AsTextBox().Order(2).Required().MaxLength(500).PageSelector().ShowInGrid().Search(Query.Operators.Contains);
+            ViewConfig(m => m.IsPattern).AsCheckBox().Order(2);
+            ViewConfig(m => m.DestinationURL).AsTextBox().Order(3).Required().MaxLength(500).PageSelector().ShowInGrid().Search(Query.Operators.Contains);
+            ViewConfig(m => m.Description).AsTextArea().Order(4).Search(Query.Operators.Contains);
         }
     }
 }

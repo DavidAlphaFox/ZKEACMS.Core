@@ -1,5 +1,5 @@
 /* http://www.zkea.net/ 
- * Copyright 2016 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
 
 using Easy.Mvc.Authorize;
@@ -8,6 +8,7 @@ using Easy.ViewPort.jsTree;
 using Microsoft.AspNetCore.Mvc;
 using ZKEACMS.Article.Models;
 using ZKEACMS.Article.Service;
+using System.Linq;
 
 namespace ZKEACMS.Article.Controllers
 {
@@ -56,7 +57,7 @@ namespace ZKEACMS.Article.Controllers
         [DefaultAuthorize(Policy = PermissionKeys.ViewArticleType)]
         public JsonResult GetArticleTypeTree()
         {
-            var allNodes = Service.Get();
+            var allNodes = Service.Get().ToList();
             var node = new Tree<ArticleType>().Source(allNodes).ToNode(m => m.ID.ToString(), m => m.Title, m => m.ParentID.ToString(), "0");
             return Json(node);
         }

@@ -1,8 +1,7 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2017 ZKEASOFT
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.MetaData;
 using Easy.Models;
 using Easy.RepositoryPattern;
@@ -28,7 +27,7 @@ namespace ZKEACMS.Shop.Models
         public int ProductId { get; set; }
         public string PromoCode { get; set; }
 
-        public OrderItem ToOrderItem(string orderid)
+        public OrderItem ToOrderItem()
         {
             return new OrderItem
             {
@@ -38,7 +37,6 @@ namespace ZKEACMS.Shop.Models
                 Price = Price,
                 ProductId = ProductId,
                 PromoCode = PromoCode,
-                OrderId = orderid,
                 Title = Title,
                 Description = Description
             };

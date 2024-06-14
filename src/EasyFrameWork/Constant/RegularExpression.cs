@@ -1,4 +1,6 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 namespace Easy.Constant
 {
@@ -28,6 +30,10 @@ namespace Easy.Constant
         /// 固定电话
         /// </summary>
         public const string ChinesePhone = @"\d{3}-\d{8}|\d{4}-\d{7}";
+        /// <summary>
+        /// 手机号
+        /// </summary>
+        public const string ChineseMobile = @"^1[34578]\d{9}$";
         /// <summary>
         /// 邮政编码
         /// </summary>
@@ -81,7 +87,11 @@ namespace Easy.Constant
         /// </summary>
         public const string LettersAndNumber = @"^[A-Za-z0-9]+$";
         /// <summary>
-        /// 匹配由数字、26个英文字母或者下划线组成的字符串
+        /// 匹配包括下划线中划线的任何单词字符
+        /// </summary>
+        public const string LetterNumberOrLine = @"^[A-Za-z0-9_-]+$";
+        /// <summary>
+        /// 匹配包括下划线的任何单词字符
         /// </summary>
         public const string LettersAndNumberAndLine = @"^\w+$";
     }

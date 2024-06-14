@@ -1,7 +1,7 @@
 @using ZKEACMS.Common.ViewModels
 @model MediaViewModel
 @{
-    ViewBag.Title = L("媒体库");
+    ViewBag.Title = L("Media");
     var action = Html.ViewContext.RouteData.Values["action"].ToString();
 
     Script.Reqiured("image-viewer").AtFoot();
@@ -16,7 +16,7 @@
     <div class="clearfix thumbnail">
         <div class="pull-left">
             <span style="line-height: 30px">
-                &nbsp;<a href="@Url.Action(action)">@L("媒体库")</a>
+                &nbsp;<a href="@Url.Action(action)">@L("Media")</a>
                 @if (Model.Parents != null)
                 {
                     foreach (MediaEntity item in Model.Parents)
@@ -30,8 +30,8 @@
         <div class="pull-right">
             @if (Authorizer.Authorize(PermissionKeys.ManageMedia))
             {
-                <input type="button" class="btn btn-primary btn-sm upload" value="@L("上传文件")" />
-                <input type="button" class="btn btn-primary btn-sm create-folder" value="@L("创建文件夹")" />
+                <input type="button" class="btn btn-primary btn-sm upload" value="@L("Upload")" />
+                <input type="button" class="btn btn-primary btn-sm create-folder" value="@L("New Folder")" />
             }
         </div>
 
@@ -79,7 +79,7 @@
                             }
                             @if (ViewBag.MultiSelect != null && media.MediaType != (int)MediaType.Folder)
                             {
-                                <i title="@L("选择")" class="multi-select unchecked glyphicon glyphicon-check glyphicon-unchecked" data-result="@Url.PathContent(media.Url)" data-name="@media.Title"></i>
+                                <i title="@L("Select")" class="multi-select unchecked glyphicon glyphicon-check glyphicon-unchecked" data-result="@Url.PathContent(media.Url)" data-name="@media.Title"></i>
                             }
                         </div>
                     </div>
@@ -90,7 +90,7 @@
     <ul class="pagination">
         @if (Model.Pagin.PageIndex >= 1)
         {
-            <li><a href="@Url.Action(action, new {ParentId = Model.ParentID})"><i class="glyphicon glyphicon-chevron-left"></i></a></li>
+            <li><a href="@Url.Action(action, new {ParentId = Model.ParentID, pageIndex = Model.Pagin.PageIndex - 1})"><i class="glyphicon glyphicon-chevron-left"></i></a></li>
         }
         else
         {
@@ -157,7 +157,7 @@
                     }
                     @if (ViewBag.MultiSelect != null)
                     {
-                        <i title="@L("选择")" class="multi-select unchecked glyphicon glyphicon-check glyphicon-unchecked"></i>
+                        <i title="@L("Select")" class="multi-select unchecked glyphicon glyphicon-check glyphicon-unchecked"></i>
                     }
                 </div>
             </div>
@@ -176,32 +176,32 @@
                 $("#media-list .preview").each(function (i) {
                     var imageUrl = $(this).data("href");
                     if (imageUrl) {
-                        images.push({ src: imageUrl, desc: $(this).data("title")});
+                        images.push({ src: imageUrl, desc: $(this).data("title") });
                         if (imageUrl == current) {
                             index = i;
                         }
                     }
                 });
-                var civer =  new CIV({
+                var civer = new CIV({
                     animation: CIV.ANIMATION.TRANSLATE,
                     background: "#444",
                     list: images,
                     index: index,
                     preload: false,
                     save: true,
-                    saveBtn: "@L("确定")",
-                    noSave:true,
+                    saveBtn: "@L("OK")",
+                    noSave: true,
                     onsave: function (a) {
-                        this.hide();                        
+                        this.hide();
                         $($("#media-list .preview")[a.index]).closest(".thumbnail").find("a.confirm")[0].click();
                     }
-                });                
+                });
                 civer.show();
-             });
+            });
 
             $(document).on("click", ".create-folder", function () {
                 var newfolder = $($("#item-template").html());
-                newfolder.find(".caption").append('<input type="text" class="edit" value="@L("新建文件夹")" />');
+                newfolder.find(".caption").append('<input type="text" class="edit" value="@L("New Folder")" />');
                 newfolder.find(".multi-select").remove();
                 if ($("#media-list > div").size() > 0) {
                     newfolder.insertBefore($("#media-list > div:first"));
@@ -254,7 +254,7 @@
                 for (var i = 0; i < this.files.length; i++) {
                     var newitem = $($("#item-template").html());
                     newitem.find(".img").attr("src", "@Url.Content("~/images/loader.gif")");
-                    newitem.find(".caption").html('<label class="label label-danger">@L("排队中...")</label>');
+                    newitem.find(".caption").html('<label class="label label-danger">@L("In Queue...")</label>');
                     if ($("#media-list > div").size() > 0) {
                         newitem.insertBefore($("#media-list > div:first"));
                     } else {
@@ -266,7 +266,7 @@
                             send: function (fileData) {
                                 var item = fileData.target;
                                 function sliceSend(start, url, result) {
-                                    var end = start + 1048000;
+                                    var end = start + 1000000;
                                     if (end > fileData.Data.size) {
                                         end = fileData.Data.size;
                                     }
@@ -302,7 +302,7 @@
                                                 downLoad.attr("href", result.url);
                                                 item.find(".tool").append(downLoad);
                                             } else {
-                                                Easy.MessageTip.Show("@L("文件上传失败。可能是因为上传的文件不被允许！")");
+                                                Easy.MessageTip.Show("@L("Upload failed")");
                                                 item.remove();
                                             }
                                             if (threads.length > 0) {
@@ -318,18 +318,21 @@
                                                 sliceSend(end, '@Url.Action("AppendFile")', result);
                                             }
                                             else {
-                                                Easy.MessageTip.Show("@L("文件上传失败。可能是因为上传的文件不被允许！")");
+                                                Easy.MessageTip.Show("@L("Upload failed")");
                                                 item.remove();
                                             }
                                         }
                                     }
                                     xhr.upload.onprogress = function (e) {
                                         var persecnt = (e.loaded + start) / fileData.Data.size * 100;
-                                        item.find(".caption").html('<label class="label label-danger">' + Math.round(persecnt) + "%" + '</label>');
+                                        if (persecnt > 100) {
+                                            persecnt = 100;
+                                        }
+                                        item.find(".caption").html('<label class="label label-danger">' + Math.floor(persecnt) + "%" + '</label>');
                                     };
                                     xhr.send(fd);
                                 }
-                                sliceSend(0,'@Url.Action("Upload")')
+                                sliceSend(0, '@Url.Action("Upload")')
                             }
                         },
                         Data: formData
@@ -342,7 +345,7 @@
             });
             $(document).on("click", ".close", function () {
                 var caption = $(this).siblings(".caption");
-                Easy.ShowMessageBox("@L("提示")", "@L("确定要删除吗？")", function () {
+                Easy.ShowMessageBox("@L("Notice")", "@L("Do you want to delete?")", function () {
                     Easy.Block();
                     $.post("@Url.Action("Delete")", { ids: caption.data("id") }, function () {
                         caption.closest(".thumbnail").parent().remove();

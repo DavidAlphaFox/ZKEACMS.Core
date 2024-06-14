@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.Models;
 using Easy.RepositoryPattern;
 using System;
@@ -8,6 +11,9 @@ using Easy.Constant;
 using Easy.LINQ;
 using System.Linq;
 using System.Linq.Expressions;
+using Easy.Extend;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 
 namespace Easy.Mvc.Controllers
 {
@@ -52,7 +58,11 @@ namespace Easy.Mvc.Controllers
                     }
                     return View(entity);
                 }
-                return RedirectToAction("Index");
+                if (entity.ActionType.HasFlag(ActionType.Exit))
+                {
+                    return RedirectToAction("Index");
+                }
+                return RedirectToAction("Edit", new { Id = GetPrimaryKeyValue(entity) });
             }
             return View(entity);
         }
@@ -73,7 +83,7 @@ namespace Easy.Mvc.Controllers
         [HttpPost]
         public virtual IActionResult Edit(TEntity entity)
         {
-            if (entity.ActionType == ActionType.Delete)
+            if (entity.ActionType.HasFlag(ActionType.Delete))
             {
                 Service.Remove(entity);
                 return RedirectToAction("Index");
@@ -90,7 +100,11 @@ namespace Easy.Mvc.Controllers
                     }
                     return View(entity);
                 }
-                return RedirectToAction("Index");
+                if (entity.ActionType.HasFlag(ActionType.Exit))
+                {
+                    return RedirectToAction("Index");
+                }
+                return RedirectToAction("Edit", new { Id = GetPrimaryKeyValue(entity) });
             }
             return View(entity);
         }
@@ -132,6 +146,19 @@ namespace Easy.Mvc.Controllers
         {
             Service.Dispose();
             base.Dispose(disposing);
+        }
+
+        private TPrimarykey GetPrimaryKeyValue(TEntity entity)
+        {
+            var myClassType = entity.GetType();
+            foreach (var propertyInfo in myClassType.GetProperties())
+            {
+                var keyAttribute = propertyInfo.GetCustomAttribute<KeyAttribute>();
+                if (keyAttribute == null) continue;
+
+                return (TPrimarykey)propertyInfo.GetValue(entity);
+            }
+            return default;
         }
     }
 }

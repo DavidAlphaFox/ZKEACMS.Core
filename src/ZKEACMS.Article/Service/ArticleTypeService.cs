@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.Extend;
 using Easy.RepositoryPattern;
 using System.Collections.Generic;
@@ -29,7 +32,7 @@ namespace ZKEACMS.Article.Service
                 if (GetByUrl(item.Url) != null)
                 {
                     var result = new ServiceResult<ArticleType>();
-                    result.RuleViolations.Add(new RuleViolation("Url", _localize.Get("Url已存在")));
+                    result.RuleViolations.Add(new RuleViolation("Url", _localize.Get("URL already exists")));
                     return result;
                 }
             }
@@ -42,7 +45,7 @@ namespace ZKEACMS.Article.Service
                 if (Count(m => m.Url == item.Url && m.ID != item.ID) > 0)
                 {
                     var result = new ServiceResult<ArticleType>();
-                    result.RuleViolations.Add(new RuleViolation("Url", _localize.Get("Url已存在")));
+                    result.RuleViolations.Add(new RuleViolation("Url", _localize.Get("URL already exists")));
                     return result;
                 }
             }
@@ -61,12 +64,11 @@ namespace ZKEACMS.Article.Service
         {
             if (item != null)
             {
+                _articleService.Remove(n => n.ArticleTypeID == item.ID);
                 GetChildren(item.ID).Each(m =>
                 {
-                    _articleService.Remove(n => n.ArticleTypeID == m.ID);
-                    Remove(m.ID);
-                });
-                _articleService.Remove(n => n.ArticleTypeID == item.ID);
+                    Remove(m);
+                });                
             }
             base.Remove(item);
         }

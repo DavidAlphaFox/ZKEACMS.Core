@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,18 +13,21 @@ using Easy;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Easy.Cache;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ZKEACMS.Zone
 {
     public class ZoneService : ServiceBase<ZoneEntity, CMSDbContext>, IZoneService
     {
         private readonly IServiceProvider _serviceProvder;
-        private readonly ICacheManager<IEnumerable<ZoneEntity>> _cacheManager;
-        public ZoneService(IApplicationContext applicationContext, IServiceProvider serviceProvder, ICacheManager<IEnumerable<ZoneEntity>> cacheManager, CMSDbContext dbContext)
+        private readonly ICacheManager<ZoneService> _cacheManager;
+        private readonly ISignals _signals;
+        public ZoneService(IApplicationContext applicationContext, IServiceProvider serviceProvder, ICacheManager<ZoneService> cacheManager, ISignals signals, CMSDbContext dbContext)
             : base(applicationContext, dbContext)
         {
             _serviceProvder = serviceProvder;
             _cacheManager = cacheManager;
+            _signals = signals;
         }
         public override DbSet<ZoneEntity> CurrentDbSet => DbContext.Zone;
         public override IQueryable<ZoneEntity> Get()
@@ -42,7 +48,7 @@ namespace ZKEACMS.Zone
         }
         public IEnumerable<ZoneEntity> GetByPage(PageEntity page)
         {
-            IEnumerable<ZoneEntity> get(string key, string region)
+            IEnumerable<ZoneEntity> get()
             {
                 IEnumerable<ZoneEntity> zones = Get().Where(m => m.PageId == page.ID).OrderBy(m => m.ID).ToList();
                 if (!zones.Any())
@@ -61,9 +67,15 @@ namespace ZKEACMS.Zone
             }
             if (page.IsPublishedPage)
             {
-                return _cacheManager.GetOrAdd(page.ID, page.ReferencePageID, get);
+                return _cacheManager.GetOrCreate(page.ID, factory =>
+                {
+                    factory.AddExpirationToken(_signals.When(page.ID));
+                    factory.AddExpirationToken(_signals.When(page.ReferencePageID));
+                    factory.AddExpirationToken(_signals.When(CacheSignals.PageZoneChanged));
+                    return get();
+                });
             }
-            return get(page.ID, page.ReferencePageID);
+            return get();
         }
         public IEnumerable<ZoneEntity> GetByLayoutId(string layoutId)
         {
@@ -72,12 +84,12 @@ namespace ZKEACMS.Zone
 
         public void RemoveCache(string pageId)
         {
-            _cacheManager.ClearRegion(pageId);
+            _signals.Trigger(pageId);
         }
 
         public void ClearCache()
         {
-            _cacheManager.Clear();
+            _signals.Trigger(CacheSignals.PageZoneChanged);
         }
     }
 }

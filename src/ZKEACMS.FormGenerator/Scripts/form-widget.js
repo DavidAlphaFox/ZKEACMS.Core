@@ -1,4 +1,8 @@
-﻿$(function () {
+﻿/*! http://www.zkea.net/
+ * Copyright (c) ZKEASOFT. All rights reserved.
+ * http://www.zkea.net/licenses */
+
+$(function () {
     $(document).on("submit", ".form-widget form", function () {
         if ($("input[type=checkbox].required-one", this).length > 0) {
             if ($("input[type=checkbox].required-one:checked", this).length == 0) {
@@ -19,4 +23,14 @@
         }
 
     });
+    if ($.fn.datetimepicker) {
+        $(".Date").each(function () {
+            if (!$(this).prop("readonly") && !$(this).prop("disabled")) {
+                $(this).datetimepicker({ locale: "zh-CN", format: $(this).attr("JsDateFormat") });
+                $(this).closest(".input-group").find(".glyphicon-calendar").click(function () {
+                    $(this).closest(".input-group").find("input").focus();
+                });
+            }
+        });
+    }
 });

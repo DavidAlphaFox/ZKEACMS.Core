@@ -1,8 +1,6 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2017 ZKEASOFT
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using Easy.Constant;
 using Easy.Mvc.Authorize;
@@ -37,11 +35,11 @@ namespace ZKEACMS.Article.Controllers
         [HttpPost, DefaultAuthorize(Policy = PermissionKeys.ManageArticle)]
         public override IActionResult Create(ArticleEntity entity)
         {
-            var result = base.Create(entity);
-            if (entity.ActionType == ActionType.Publish)
+            if (entity.ActionType.HasFlag(ActionType.Publish) && _authorizer.Authorize(PermissionKeys.PublishArticle))
             {
-                Service.Publish(entity.ID);
+                Service.Publish(entity);
             }
+            var result = base.Create(entity);
             return result;
         }
         [DefaultAuthorize(Policy = PermissionKeys.ManageArticle)]
@@ -53,9 +51,9 @@ namespace ZKEACMS.Article.Controllers
         public override IActionResult Edit(ArticleEntity entity)
         {
             var result = base.Edit(entity);
-            if (entity.ActionType == ActionType.Publish && _authorizer.Authorize(PermissionKeys.PublishArticle))
+            if (entity.ActionType.HasFlag(ActionType.Publish) && _authorizer.Authorize(PermissionKeys.PublishArticle))
             {
-                Service.Publish(entity.ID);
+                Service.Publish(entity);
             }
             if (Request.Query["ReturnUrl"].Count > 0)
             {
@@ -72,6 +70,11 @@ namespace ZKEACMS.Article.Controllers
         public override IActionResult Delete(int id)
         {
             return base.Delete(id);
+        }
+        [DefaultAuthorize(Policy = PermissionKeys.ViewArticle)]
+        public IActionResult Select()
+        {
+            return View();
         }
     }
 }

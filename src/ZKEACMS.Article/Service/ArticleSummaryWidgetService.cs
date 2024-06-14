@@ -1,8 +1,13 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
+using System.Collections.Generic;
 using Easy;
 using Microsoft.EntityFrameworkCore;
 using ZKEACMS.Article.Models;
+using ZKEACMS.Common.Models;
 using ZKEACMS.Widget;
 
 namespace ZKEACMS.Article.Service
@@ -12,6 +17,11 @@ namespace ZKEACMS.Article.Service
         public ArticleSummaryWidgetService(IWidgetBasePartService widgetService, IApplicationContext applicationContext, CMSDbContext dbContext)
             : base(widgetService, applicationContext, dbContext)
         {
-        }     
+        }
+
+        protected override IEnumerable<string> GetFilesInWidget(ArticleSummaryWidget widget)
+        {
+            return ParseHtmlImageUrls(widget.Summary);
+        }
     }
 }

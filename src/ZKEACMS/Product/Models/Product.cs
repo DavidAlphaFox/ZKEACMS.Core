@@ -1,4 +1,6 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 using System;
 using System.Collections.Generic;
 using Easy.Constant;
@@ -98,7 +100,7 @@ namespace ZKEACMS.Product.Models
             ViewConfig(m => m.TargetFrom).AsHidden();
             ViewConfig(m => m.TargetUrl).AsHidden();
             ViewConfig(m => m.Title).AsTextBox().Required().Order(0).ShowInGrid().Search(Query.Operators.Contains);
-            ViewConfig(m => m.Url).AsTextBox().Order(1).MaxLength(100).UrlPart();
+            ViewConfig(m => m.Url).AsTextBox().Order(1).MaxLength(100).UrlPart().Required().RandomText();
             ViewConfig(m => m.ImageUrl).AsTextBox().Required().MediaSelector();
             ViewConfig(m => m.ImageThumbUrl).AsTextBox().Required().MediaSelector();
             ViewConfig(m => m.PartNumber).AsTextBox().ShowInGrid().Search(Query.Operators.Contains);

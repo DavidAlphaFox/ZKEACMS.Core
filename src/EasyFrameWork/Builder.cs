@@ -1,6 +1,7 @@
 /* http://www.zkea.net/ 
  * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using Easy.Cache;
 using Easy.Encrypt;
 using Easy.Extend;
@@ -18,6 +19,7 @@ using Easy.Mvc.StateProviders;
 using Easy.Mvc.ValueProvider;
 using Easy.Net;
 using Easy.Notification;
+using Easy.Notification.Queue;
 using Easy.Options;
 using Easy.RepositoryPattern;
 using Easy.RuleEngine;
@@ -25,17 +27,12 @@ using Easy.RuleEngine.RuleProviders;
 using Easy.RuleEngine.Scripting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
@@ -67,8 +64,10 @@ namespace Easy
 
             services.AddTransient<IViewRenderService, ViewRenderService>();
             services.AddTransient<INotificationManager, NotificationManager>();
-            services.AddTransient<INotifyService, EmailNotifyService>();
-            services.AddTransient<INotifyService, RazorEmailNotifyService>();
+            services.AddTransient<INotificationProvider, EmailNotificationProvider>();
+            services.AddTransient<INotificationProvider, RazorEmailNotificationProvider>();
+            services.AddTransient<IEmailNotification, EmailNotificationProvider>();
+            services.AddTransient<IEmailQueue>(provider => null);
             services.AddTransient<IPluginLoader, Loader>();
             services.AddTransient<IRuleManager, RuleManager>();
             services.AddTransient<IRuleProvider, CommonMethodsRuleProvider>();
@@ -76,20 +75,20 @@ namespace Easy
             services.AddTransient<IRuleProvider, DateRuleProvider>();
             services.AddTransient<IRuleProvider, MoneyRuleProvider>();
             services.AddTransient<IScriptExpressionEvaluator, ScriptExpressionEvaluator>();
-            services.AddTransient<WebClient>();
+            services.AddTransient<IWebClient, WebClient>().AddHttpClient();
 
-            services.AddSingleton<ICacheProvider, DefaultCacheProvider>();
-            services.AddTransient<ILocalize, Localize>();
+            services.AddScoped<ILocalize, Localize>();
 
-            services.ConfigureCache<ScriptExpressionResult>();
-            services.ConfigureCache<ConcurrentDictionary<string, ConcurrentDictionary<string, LanguageEntity>>>();
+            services.AddMemoryCache();
+            services.AddTransient(typeof(ICacheManager<>), typeof(CacheManager<>));
+            services.AddSingleton<ISignals, Signals>();
 
-            services.AddSingleton<IAuthorizationHandler, RolePolicyRequirementHandler>();
-            //services.AddSingleton(HtmlEncoder.Create(UnicodeRanges.All));
+            services.AddScoped<IAuthorizationHandler, RolePolicyRequirementHandler>();
+            services.AddSingleton(HtmlEncoder.Create(UnicodeRanges.All));
 
-            services.AddScoped<IApplicationContextStateProvider, CurrentCustomerStateProvider>();
-            services.AddScoped<IApplicationContextStateProvider, CurrentUserStateProvider>();
-            services.AddScoped<IApplicationContextStateProvider, HostingEnvironmentStateProvider>();
+            services.ConfigureStateProvider<CurrentCustomerStateProvider>();
+            services.ConfigureStateProvider<CurrentUserStateProvider>();
+            services.ConfigureStateProvider<HostingEnvironmentStateProvider>();
 
             services.ConfigureMetaData<UserEntity, UserMetaData>();
             services.ConfigureMetaData<DataDictionaryEntity, DataDictionaryEntityMetaData>();
@@ -97,14 +96,18 @@ namespace Easy
             services.ConfigureMetaData<Permission, PermissionMetaData>();
             services.ConfigureMetaData<RoleEntity, RoleMetaData>();
             services.ConfigureMetaData<UserRoleRelation, UserRoleRelationMetaData>();
+            services.ConfigureMetaData<SmtpSetting, SmtpSettingMetaData>();
 
 
             services.Configure<CDNOption>(configuration.GetSection("CDN"));
             services.Configure<CultureOption>(configuration.GetSection("Culture"));
 
             services.AddDataProtection();
-
-            //services.AddDbContext<EasyDbContext>();
+            //Share persistkeys for distributed deployment
+            //You can create a new implementation of 'IXmlRepository' to store the persistkeys for sharing, like Redis or other database
+            //FileSystemXmlRepository:
+            //https://github.com/dotnet/aspnetcore/blob/master/src/DataProtection/DataProtection/src/Repositories/FileSystemXmlRepository.cs
+            //services.AddDataProtection().SetApplicationName("ZKEACMS").PersistKeysToFileSystem(new DirectoryInfo("PersistKeys"));
         }
 
         public static void ConfigureMetaData<TEntity, TMetaData>(this IServiceCollection service)
@@ -124,10 +127,6 @@ namespace Easy
         {
             builder.UseMiddleware<PluginStaticFileMiddleware>();
             return builder;
-        }
-        public static void UseFileLog(this ILoggerFactory loggerFactory, IHostingEnvironment env, IHttpContextAccessor httpContextAccessor)
-        {
-            loggerFactory.AddProvider(new FileLoggerProvider(env, httpContextAccessor));
         }
     }
 }

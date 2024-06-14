@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System.Collections.ObjectModel;
 using Easy.MetaData;
 using Easy.Models;
@@ -21,7 +24,7 @@ namespace ZKEACMS.Layout
 
         public string NoStyleHtml
         {
-            get { return CustomRegex.StyleRegex.Replace(Html, ""); }
+            get { return CustomRegex.CssStyle().Replace(Html, string.Empty); }
         }
     }
     public class LayoutHtmlCollection : Collection<LayoutHtml>

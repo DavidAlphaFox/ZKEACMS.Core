@@ -1,9 +1,6 @@
-﻿/*!
- * http://www.zkea.net/
- * Copyright 2017 ZKEASOFT
- * 深圳市纸壳软件有限公司
- * http://www.zkea.net/licenses
- */
+﻿/*! http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 body {
     background: url(../images/dotted.png);
@@ -16,6 +13,10 @@ img {
 #wrap {
     height: 100%;
 }
+
+    #wrap .navbar-fixed-top {
+        z-index: 1;
+    }
 
 .tab-content.panel {
     border-top-color: #fff;
@@ -62,6 +63,17 @@ img {
         position: absolute;
         left: 10px;
         top: -10px;
+    }
+
+.alert .field-validation-error {
+    position: static;
+    background: none;
+    margin: 0;
+    color: inherit;
+}
+
+    .alert .field-validation-error:before {
+        display: none;
     }
 
 @media (min-width: 1440px) {
@@ -309,6 +321,9 @@ a.badge:hover {
         margin: 5px;
         background-color: white;
     }
+        .fullRowList li.muted {
+            border-left: 5px solid #ddd;
+        }
 
         .fullRowList li.sorting {
             height: 34px;
@@ -339,6 +354,10 @@ a.badge:hover {
         font-size: 12px;
     }
 
+    .fullRowList .icon {
+        width: 16px;
+    }
+
     .fullRowList.tags input {
         border: 1px solid #fff;
         padding: 2px 4px;
@@ -367,6 +386,8 @@ a.badge:hover {
     .fullRowList a {
         text-decoration: none;
         outline: none;
+        display: inline-block;
+        margin: 0 2px;
     }
 
     .fullRowList li:hover a,
@@ -374,6 +395,16 @@ a.badge:hover {
         color: #E28271;
     }
 
+    .fullRowList li.disabled {
+        border-left: 5px solid #ddd;
+        color: #ccc;
+    }
+
+        .fullRowList li.disabled .icon {
+            opacity: 0.2;
+        }
+
+#rules.fullRowList .rule-item,
 #layouts.fullRowList li {
     cursor: pointer;
 }
@@ -524,7 +555,7 @@ a.badge:hover {
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#fff5f5f5', GradientType=0);
 }
 
-.form-group select#ZoneID,
+.form-group select#ZoneId,
 .form-group select.select {
     cursor: pointer;
 }
@@ -533,6 +564,11 @@ a.badge:hover {
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
+}
+
+.form-group .tox-tinymce {
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 #media-list .edit {
@@ -555,6 +591,10 @@ a.badge:hover {
     text-align: center;
 }
 
+    #media-list .thumbnail > a.img-link.confirm img {
+        background: url(../images/opacity-dotted.png);
+    }
+
     #media-list .thumbnail > a.img-link img {
         max-height: 100%;
         vertical-align: middle;
@@ -572,7 +612,7 @@ a.badge:hover {
 
 #media-list .thumbnail.status-2 .caption:after {
     display: block;
-    content: "文件不完整";
+    content: "Error";
     color: #fff;
     position: absolute;
     left: 0;
@@ -585,6 +625,12 @@ a.badge:hover {
 
 #media-list .thumbnail .caption .edit {
     text-align: center;
+    height: 20px;
+    padding: 0;
+    line-height: 20px;
+    border: 1px solid #ddd;
+    outline: none;
+    border-radius: 3px;
 }
 
 #media-list .thumbnail .close {
@@ -647,6 +693,8 @@ a.badge:hover {
 
 .dataTable {
     background-color: #fff;
+    border-left: 0;
+    border-right: 0;
 }
 
     .dataTable thead,
@@ -689,15 +737,24 @@ table.table-bordered.dataTable th, table.table-bordered.dataTable td {
     vertical-align: middle;
 }
 
-    table.table-bordered.dataTable th, table.table-bordered.dataTable td:first-child {
-        white-space: nowrap;
-    }
+table.table-bordered.dataTable > thead > tr > th, table.table-bordered.dataTable > tbody > tr > td:first-child {
+    white-space: nowrap;
+}
+
+div.dataTables_wrapper > .row > .col-sm-12 {
+    padding: 0;
+}
 
 div.dataTables_wrapper div.dataTables_processing {
     text-indent: -5000px;
     background: #fff url('../js/EasyPlug/Css/Images/loader.gif') center center no-repeat;
     width: 50px;
     margin-left: -25px;
+}
+
+div.dataTables_wrapper div.dataTables_paginate ul.pagination {
+    margin: 4px 0 0;
+    float: right;
 }
 
 .tag-selector .panel:last-child {
@@ -716,4 +773,36 @@ a.pack-theme {
     .template-list .thumb-item {
         max-width: 180px;
     }
+}
+
+.seach-terms .form-group {
+    margin-right: 15px;
+    margin-bottom: 10px;
+}
+
+@media (min-width: 768px) {
+    .seach-terms.form-inline .form-group {
+        display: block;
+        float: left;
+    }
+
+    .seach-terms .form-control {
+        max-width: 160px;
+    }
+}
+
+.seach-terms .form-control.required {
+    background-color: #fff;
+}
+
+.dataTable tfoot .search {
+    display: none;
+}
+
+.select2-container--default .select2-selection--single {
+    border-color: #ccc;
+}
+
+.opacity-dotted {
+    background: url(../images/opacity-dotted.png);
 }

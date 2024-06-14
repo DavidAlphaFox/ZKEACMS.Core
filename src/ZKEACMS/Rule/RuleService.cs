@@ -1,6 +1,7 @@
 /* http://www.zkea.net/ 
  * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using Easy;
 using Easy.RepositoryPattern;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +11,9 @@ using System.Text;
 using Easy.Extend;
 using ZKEACMS.Extend;
 using System.Linq;
-using Newtonsoft.Json;
 using ZKEACMS.Widget;
 using Easy.RuleEngine;
+using Easy.Serializer;
 
 namespace ZKEACMS.Rule
 {
@@ -21,20 +22,23 @@ namespace ZKEACMS.Rule
         private readonly IWidgetBasePartService _widgetBasePartService;
         private readonly IWidgetActivator _widgetActivator;
         private readonly IRuleManager _ruleManager;
+        private readonly ILocalize _localize;
         public RuleService(IApplicationContext applicationContext,
             IWidgetBasePartService widgetBasePartService,
             IWidgetActivator widgetActivator, IRuleManager
-            ruleManager, CMSDbContext dbContext)
+            ruleManager, CMSDbContext dbContext,
+            ILocalize localize)
             : base(applicationContext, dbContext)
         {
             _widgetBasePartService = widgetBasePartService;
             _widgetActivator = widgetActivator;
             _ruleManager = ruleManager;
+            _localize = localize;
         }
         private Rule Init(Rule item)
         {
             item.RuleItemList = item.RuleItemList.RemoveDeletedItems().ToList();
-            item.RuleItems = JsonConvert.SerializeObject(item.RuleItemList);
+            item.RuleItems = JsonConverter.Serialize(item.RuleItemList);
             StringBuilder expressionBuilder = new StringBuilder();
             foreach (var ruleItem in item.RuleItemList)
             {
@@ -54,7 +58,7 @@ namespace ZKEACMS.Rule
             }
             return item;
         }
-        static bool IsDigitCharacter(char ch)
+        bool IsDigitCharacter(char ch)
         {
             return ch >= '0' && ch <= '9';
         }
@@ -80,7 +84,7 @@ namespace ZKEACMS.Rule
             catch
             {
                 var result = new ServiceResult<Rule>();
-                result.RuleViolations.Add(new RuleViolation("Title", "条件中的值有错，保存失败"));
+                result.RuleViolations.Add(new RuleViolation("Title", _localize.Get("There is an error value in the condition, save failed!")));
                 return result;
             }
             return base.Add(item);
@@ -95,7 +99,7 @@ namespace ZKEACMS.Rule
             catch
             {
                 var result = new ServiceResult<Rule>();
-                result.RuleViolations.Add(new RuleViolation("Title", "条件中的值有错，保存失败"));
+                result.RuleViolations.Add(new RuleViolation("Title", _localize.Get("There is an error value in the condition, save failed!")));
                 return result;
             }
             return base.Update(item);
@@ -105,7 +109,7 @@ namespace ZKEACMS.Rule
             var rule = base.Get(primaryKey);
             if (rule.RuleItems.IsNotNullAndWhiteSpace())
             {
-                rule.RuleItemList = JsonConvert.DeserializeObject<List<RuleItem>>(rule.RuleItems);
+                rule.RuleItemList = JsonConverter.Deserialize<List<RuleItem>>(rule.RuleItems);
             }
             return rule;
         }

@@ -1,11 +1,12 @@
 /* http://www.zkea.net/ 
- * Copyright 2017 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
 
 using Easy.Extend;
+using Easy.Serializer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,24 +20,27 @@ namespace Easy.Mvc.Plugin
         public const string PluginFolder = "Plugins";
         private const string PluginInfoFile = "zkea.plugin";
 #if DEBUG
-        private string[] AltDevelopmentPath = new[] { "bin", "Debug", "netcoreapp2.2" };
+        private readonly string[] AltDevelopmentPath = new[] { "bin", "Debug", "net8.0" };
 #else
-        private string[] AltDevelopmentPath = new[] { "bin", "Release", "netcoreapp2.2" };
+        private readonly string[] AltDevelopmentPath = new[] { "bin", "Release", "net8.0" };
 #endif
-        private static List<AssemblyLoader> Loaders = new List<AssemblyLoader>();
-        private static Dictionary<string, Assembly> LoadedAssemblies = new Dictionary<string, Assembly>();
-        public Loader(IHostingEnvironment hostEnvironment)
+        private readonly static List<AssemblyLoader> Loaders = new List<AssemblyLoader>();
+        private readonly static Dictionary<string, Assembly> LoadedAssemblies = new Dictionary<string, Assembly>();
+        public Loader(IWebHostEnvironment hostEnvironment)
         {
             HostingEnvironment = hostEnvironment;
         }
-        public IHostingEnvironment HostingEnvironment { get; set; }
+        public IWebHostEnvironment HostingEnvironment { get; set; }
         public IEnumerable<IPluginStartup> LoadEnablePlugins(IServiceCollection serviceCollection)
         {
             var start = DateTime.Now;
-            Loaders.AddRange(GetPlugins().Where(m => m.Enable && m.ID.IsNotNullAndWhiteSpace()).Select(m =>
+            List<PluginInfo> availablePlugins = GetPlugins().Where(m => m.Enable && m.ID.IsNotNullAndWhiteSpace()).ToList();
+            Loaders.AddRange(availablePlugins.Select(m =>
             {
-                var loader = new AssemblyLoader();
-                loader.CurrentPath = m.RelativePath;
+                var loader = new AssemblyLoader(availablePlugins)
+                {
+                    CurrentPath = m.RelativePath
+                };
                 var assemblyPath = Path.Combine(m.RelativePath, (HostingEnvironment.IsDevelopment() ? Path.Combine(AltDevelopmentPath) : string.Empty), m.FileName);
 
                 Console.WriteLine("Loading: {0}", m.Name);
@@ -73,7 +77,7 @@ namespace Easy.Mvc.Plugin
                     string pluginInfo = Path.Combine(item.FullName, PluginInfoFile);
                     if (File.Exists(pluginInfo))
                     {
-                        var plugin = JsonConvert.DeserializeObject<PluginInfo>(File.ReadAllText(pluginInfo));
+                        var plugin = JsonConverter.Deserialize<PluginInfo>(File.ReadAllText(pluginInfo));
                         plugin.RelativePath = item.FullName;
                         yield return plugin;
                     }
@@ -87,7 +91,7 @@ namespace Easy.Mvc.Plugin
             GetPlugins().Where(m => m.ID == pluginId).Each(m =>
             {
                 m.Enable = false;
-                File.WriteAllText(m.RelativePath.CombinePath(PluginInfoFile), JsonConvert.SerializeObject(m));
+                File.WriteAllText(m.RelativePath.CombinePath(PluginInfoFile), JsonConverter.Serialize(m));
             });
         }
 
@@ -96,7 +100,7 @@ namespace Easy.Mvc.Plugin
             GetPlugins().Where(m => m.ID == pluginId).Each(m =>
             {
                 m.Enable = true;
-                File.WriteAllText(m.RelativePath.CombinePath(PluginInfoFile), JsonConvert.SerializeObject(m));
+                File.WriteAllText(m.RelativePath.CombinePath(PluginInfoFile), JsonConverter.Serialize(m));
             });
         }
 

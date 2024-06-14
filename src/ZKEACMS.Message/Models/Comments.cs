@@ -1,8 +1,6 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2018 ZKEASOFT
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using Easy.MetaData;
 using Easy.Models;
@@ -34,7 +32,7 @@ namespace ZKEACMS.Message.Models
             ViewConfig(m => m.PagePath).AsTextBox().ReadOnly();
             ViewConfig(m => m.UserId).AsHidden();
             ViewConfig(m => m.Picture).AsHidden();
-            ViewConfig(m => m.CommentContent).AsTextArea().ShowInGrid().MaxLength(100);
+            ViewConfig(m => m.CommentContent).AsTextArea().ShowInGrid().MaxLength(500);
         }
     }
 }

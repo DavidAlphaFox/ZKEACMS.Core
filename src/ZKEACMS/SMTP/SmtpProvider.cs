@@ -1,5 +1,5 @@
 /* http://www.zkea.net/ 
- * Copyright 2018 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
 
 using Easy.Notification;
@@ -8,6 +8,7 @@ using System.Net.Mail;
 using ZKEACMS.Setting;
 using Easy.Extend;
 using System;
+using System.IO;
 
 namespace ZKEACMS.SMTP
 {
@@ -18,14 +19,19 @@ namespace ZKEACMS.SMTP
         {
             _applicationSettingService = applicationSettingService;
         }
-        public SmtpClient Get()
+        public SmtpClient GetSmtpClient()
         {
-            var setting = _applicationSettingService.Get<SmtpSetting>();
+            var setting = GetSmtpSetting();
+            return GetSmtpClient(setting);
+        }
+
+        public SmtpClient GetSmtpClient(SmtpSetting setting)
+        {
             if (setting.Host.IsNullOrWhiteSpace() || setting.Email.IsNullOrWhiteSpace())
             {
-                throw new Exception("SMTP Server is not ready, for more information: https://www.zkea.net/codesnippet/detail/post-97.html");
+                return null;
             }
-            SmtpClient client = null;
+            SmtpClient client;
             if (setting.Port > 0)
             {
                 client = new SmtpClient(setting.Host, setting.Port);
@@ -34,10 +40,16 @@ namespace ZKEACMS.SMTP
             {
                 client = new SmtpClient(setting.Host);
             }
-            client.UseDefaultCredentials = true;
+
             client.EnableSsl = setting.EnableSsl;
             client.Credentials = new NetworkCredential(setting.Email, setting.PassWord);
+
             return client;
+        }
+
+        public SmtpSetting GetSmtpSetting()
+        {
+            return _applicationSettingService.Get<SmtpSetting>();
         }
     }
 }

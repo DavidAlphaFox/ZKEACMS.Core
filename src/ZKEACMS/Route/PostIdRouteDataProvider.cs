@@ -1,9 +1,6 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2018 ZKEASOFT
- * 深圳市纸壳软件有限公司
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using System;
 using System.Collections.Generic;
@@ -18,10 +15,10 @@ namespace ZKEACMS.Route
 
         public string ExtractVirtualPath(string path, RouteValueDictionary values)
         {
-            if (CustomRegex.PostIdRegex.IsMatch(path))
+            if (CustomRegex.PostId().IsMatch(path))
             {
                 int postId = 0;
-                path = CustomRegex.PostIdRegex.Replace(path, evaluator =>
+                path = CustomRegex.PostId().Replace(path, evaluator =>
                 {
                     int.TryParse(evaluator.Groups[1].Value, out postId);
                     return string.Empty;

@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.Models;
 using Microsoft.AspNetCore.Hosting;
 using System;
@@ -9,7 +12,7 @@ namespace Easy
     {
         IUser CurrentUser { get; }
         IUser CurrentCustomer { get; }
-        IHostingEnvironment HostingEnvironment { get; }
+        IWebHostEnvironment HostingEnvironment { get; }
         bool IsAuthenticated { get; }
         T As<T>() where T : class, IApplicationContext;
         T Get<T>(string name);

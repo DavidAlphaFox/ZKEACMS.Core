@@ -1,6 +1,7 @@
 /* http://www.zkea.net/ 
- * Copyright 2018 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using Easy.Extend;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
@@ -14,7 +15,7 @@ namespace Easy.Mvc.Plugin
     public class DeveloperViewFileProvider : IFileProvider
     {
         public const string ProjectRootPath = "/Porject.RootPath/";
-        public DeveloperViewFileProvider(IHostingEnvironment hostingEnvironment)
+        public DeveloperViewFileProvider(IWebHostEnvironment hostingEnvironment)
         {
             HostingEnvironment = hostingEnvironment;
         }
@@ -22,7 +23,7 @@ namespace Easy.Mvc.Plugin
         {
             return null;
         }
-        public IHostingEnvironment HostingEnvironment { get; }
+        public IWebHostEnvironment HostingEnvironment { get; }
 
         public IFileInfo GetFileInfo(string subpath)
         {

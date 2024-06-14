@@ -1,8 +1,7 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2018 ZKEASOFT
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using ZKEACMS.Message.Models;
 using ZKEACMS.Message.Service;
 using Easy.Mvc.Authorize;
@@ -25,6 +24,7 @@ namespace ZKEACMS.Message.Controllers
         [HttpPost, DefaultAuthorize(Policy = PermissionKeys.ManageMessage)]
         public override IActionResult Create(MessageEntity entity)
         {
+            ModelState.Remove("Captcha");
             return base.Create(entity);
         }
         [DefaultAuthorize(Policy = PermissionKeys.ManageMessage)]
@@ -35,6 +35,7 @@ namespace ZKEACMS.Message.Controllers
         [HttpPost, DefaultAuthorize(Policy = PermissionKeys.ManageMessage)]
         public override IActionResult Edit(MessageEntity entity)
         {
+            ModelState.Remove("Captcha");
             return base.Edit(entity);
         }
         [HttpPost, DefaultAuthorize(Policy = PermissionKeys.ManageMessage)]

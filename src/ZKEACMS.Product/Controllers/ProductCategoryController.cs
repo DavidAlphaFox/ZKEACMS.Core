@@ -1,5 +1,6 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
-
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using Easy.Mvc.Authorize;
 using Easy.Mvc.Controllers;
@@ -7,7 +8,7 @@ using Easy.ViewPort.jsTree;
 using Microsoft.AspNetCore.Mvc;
 using ZKEACMS.Product.Models;
 using ZKEACMS.Product.Service;
-using Easy.Extend;
+using System.Linq;
 
 namespace ZKEACMS.Product.Controllers
 {
@@ -62,7 +63,7 @@ namespace ZKEACMS.Product.Controllers
         [DefaultAuthorize(Policy = PermissionKeys.ViewProductCategory)]
         public JsonResult GetProductCategoryTree()
         {
-            var pages = Service.Get();
+            var pages = Service.Get().ToList();
             var node = new Tree<ProductCategory>().Source(pages).ToNode(m => m.ID.ToString(), m => m.Title, m => m.ParentID.ToString(), "0");
             return Json(node);
         }

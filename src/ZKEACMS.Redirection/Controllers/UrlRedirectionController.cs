@@ -1,5 +1,6 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
-
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using Easy.Constant;
 using Easy.Extend;
@@ -30,12 +31,12 @@ namespace ZKEACMS.Redirection.Controllers
         {
             if (Url.Content(redirect.InComingUrl) == Url.Content(redirect.DestinationURL))
             {
-                ModelState.AddModelError("InComingUrl", _localize.Get("访问地址和跳转地址不能一样"));
+                ModelState.AddModelError("InComingUrl", _localize.Get("Incoming address is the same with target address."));
                 return false;
             }
             if (Service.Count(m => m.InComingUrl == redirect.InComingUrl && m.ID != redirect.ID) > 0)
             {
-                ModelState.AddModelError("InComingUrl", _localize.Get("访问地址已经存在，不可重复添加"));
+                ModelState.AddModelError("InComingUrl", _localize.Get("Incoming address is already exists."));
                 return false;
             }
             return true;
@@ -92,21 +93,21 @@ namespace ZKEACMS.Redirection.Controllers
         }
         public IActionResult RedirectTo(string path)
         {
-            if (path.IsNotNullAndWhiteSpace() && path.IndexOf(".html", StringComparison.OrdinalIgnoreCase) < 0 && CustomRegex.PostIdRegex.IsMatch(path))
+            if (path.IsNotNullAndWhiteSpace() && path.IndexOf(".html", StringComparison.OrdinalIgnoreCase) < 0 && CustomRegex.PostId().IsMatch(path))
             {
-                return RedirectPermanent($"~/{(path ?? "")}.html");
+                return RedirectPermanent($"~/{(path ?? "").Trim()}.html");
             }
             path = $"~/{(path ?? "").TrimEnd('/')}";
-            var redirec = Service.GetAll().Where(m => m.InComingUrl == path).FirstOrDefault();
+            var redirec = Service.GetMatchedRedirection(path);
             if (redirec != null)
             {
                 if (redirec.IsPermanent)
                 {
-                    return RedirectPermanent(redirec.DestinationURL);
+                    return RedirectPermanent(redirec.GetDestinationURL(path));
                 }
                 else
                 {
-                    return Redirect(redirec.DestinationURL);
+                    return Redirect(redirec.GetDestinationURL(path));
                 }
             }
             return this.NotFoundResult();

@@ -3,7 +3,7 @@
 {
     return;
 }
-@if (Model.Script.StartsWith("<script"))
+@if (Model.Script.Contains("<script", StringComparison.OrdinalIgnoreCase))
 {
     @Html.Raw(Model.Script)
 }
@@ -13,7 +13,7 @@ else
         @Html.Raw(Model.Script)
     </script>
 }
-@if (ApplicationContext.As<CMSApplicationContext>().IsDesignMode)
+@if (this.WorkContext().IsDesignMode)
 {
-    <pre class="code" code="JavaScript">@Model.Script</pre>
+    <pre class="code" code="JavaScript">@L("JavaScript")</pre>
 }

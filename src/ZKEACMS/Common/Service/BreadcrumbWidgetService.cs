@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System.Collections.Generic;
 using System.Linq;
 using Easy;
@@ -23,15 +26,15 @@ namespace ZKEACMS.Common.Service
 
         public override DbSet<BreadcrumbWidget> CurrentDbSet => DbContext.BreadcrumbWidget;
 
-        public override WidgetViewModelPart Display(WidgetBase widget, ActionContext actionContext)
+        public override object Display(WidgetDisplayContext widgetDisplayContext)
         {
-            List<PageEntity> ParentPages = new List<PageEntity>();
-            var layout = actionContext.HttpContext.GetLayout();
+            List<PageEntity> parentPages = new List<PageEntity>();
+            var layout = widgetDisplayContext.PageLayout;
             if (layout != null && layout.Page != null)
             {
-                GetParentPage(ParentPages, layout.Page);
+                GetParentPage(parentPages, layout.Page);
             }
-            return widget.ToWidgetViewModelPart(ParentPages);
+            return parentPages;
         }
 
         void GetParentPage(List<PageEntity> parentPages, PageEntity page)

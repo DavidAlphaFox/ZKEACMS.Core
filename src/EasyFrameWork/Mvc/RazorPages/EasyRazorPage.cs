@@ -1,6 +1,7 @@
 /* http://www.zkea.net/ 
- * Copyright 2018 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using Microsoft.AspNetCore.Mvc.Razor;
 using Easy.Mvc.Resource;
 using Microsoft.AspNetCore.Html;
@@ -82,7 +83,7 @@ namespace Easy.Mvc.RazorPages
         {
             var builder = new HtmlContentBuilder();
             IUrlHelper urlHelper = Context.RequestServices.GetService<IUrlHelperFactory>().GetUrlHelper(ViewContext);
-            IHostingEnvironment hostingEnvironment = Context.RequestServices.GetService<IHostingEnvironment>();
+            IWebHostEnvironment hostingEnvironment = Context.RequestServices.GetService<IWebHostEnvironment>();
             IOptions<CDNOption> options = Context.RequestServices.GetService<IOptions<CDNOption>>();
             switch (type)
             {

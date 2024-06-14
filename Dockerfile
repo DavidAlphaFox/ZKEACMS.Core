@@ -1,22 +1,25 @@
-FROM microsoft/dotnet:2.2.100-sdk AS builder
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS builder
 WORKDIR /build
 # Copy all files
 COPY . ./
 RUN dotnet restore
-RUN dotnet tool install -g ZKEACMS.Publisher
+ENV PATH="${PATH}:/root/.dotnet/tools"
+RUN dotnet tool install --global ZKEACMS.Publisher
+RUN dotnet tool install --global sqlite-exec
 # Release ZKEACMS.WebHost
 WORKDIR /build/src/ZKEACMS.WebHost
-ENV PATH "$PATH:/root/.dotnet/tools"
 RUN publish-zkeacms
 
-# Copy Database
+# Create database
 RUN mkdir /build/src/ZKEACMS.WebHost/bin/Release/PublishOutput/App_Data
-RUN cp -f /build/DataBase/SQLite/Database.sqlite /build/src/ZKEACMS.WebHost/bin/Release/PublishOutput/App_Data/Database.sqlite
-RUN cp -f /build/DataBase/SQLite/appsettings.json /build/src/ZKEACMS.WebHost/bin/Release/PublishOutput/appsettings.json
+RUN sqlite-exec -d /build/src/ZKEACMS.WebHost/bin/Release/PublishOutput/Database.sqlite -f /build/Database/SQLite/ZKEACMS.sqlite.sql
+RUN cp -f /build/Database/SQLite/appsettings.json /build/src/ZKEACMS.WebHost/bin/Release/PublishOutput/appsettings.json
 
 # Build runtime image
-FROM microsoft/dotnet:2.2.0-aspnetcore-runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /zkeacms
 COPY --from=builder /build/src/ZKEACMS.WebHost/bin/Release/PublishOutput .
-EXPOSE 80
-ENTRYPOINT ["dotnet", "ZKEACMS.WebHost.dll"]
+EXPOSE 8080
+RUN echo "cp -n Database.sqlite App_Data/Database.sqlite" > run.sh
+RUN echo "dotnet ZKEACMS.WebHost.dll" >> run.sh
+ENTRYPOINT ["sh", "run.sh"]

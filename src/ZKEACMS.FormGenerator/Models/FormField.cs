@@ -1,10 +1,15 @@
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Easy.Extend;
-using Newtonsoft.Json;
 using System.Text;
+using Easy;
+using Newtonsoft.Json;
 
 namespace ZKEACMS.FormGenerator.Models
 {
@@ -32,6 +37,7 @@ namespace ZKEACMS.FormGenerator.Models
         public string Description { get; set; }
         public string Placeholder { get; set; }
         public bool IsRequired { get; set; }
+        public string RequiredMessage { get; set; }
         public int? Size { get; set; }
         public string Column { get; set; }
         public string RegexPattern { get; set; }
@@ -44,12 +50,14 @@ namespace ZKEACMS.FormGenerator.Models
             {
                 if (attirbutes == null)
                 {
+                    ILocalize localize = Easy.ServiceLocator.GetService<ILocalize>();
                     attirbutes = new Dictionary<string, object>();
                     attirbutes.Add("class", (IsRequired ? "required " : "") + "form-control ");
                     attirbutes.Add("data-val", "true");
                     if (IsRequired)
                     {
-                        attirbutes.Add("data-val-required", DisplayName + "不能为空");
+                        string requiredMessage = RequiredMessage ?? localize.Get("{0} is required").FormatWith(DisplayName);
+                        attirbutes.Add("data-val-required", requiredMessage);
                     }
                     if (Placeholder.IsNotNullAndWhiteSpace())
                     {
@@ -57,7 +65,8 @@ namespace ZKEACMS.FormGenerator.Models
                     }
                     if (RegexPattern.IsNotNullAndWhiteSpace())
                     {
-                        Attributes.Add("data-val-regex", RegexMessage ?? "输入不正确");
+                        string invalidMessage = RegexMessage ?? localize.Get("{0} is invalid").FormatWith(DisplayName);
+                        Attributes.Add("data-val-regex", invalidMessage);
                         Attributes.Add("data-val-regex-pattern", RegexPattern);
                     }
                 }
@@ -66,22 +75,26 @@ namespace ZKEACMS.FormGenerator.Models
         }
         public List<FieldOption> FieldOptions { get; set; }
         public List<AdditionalSetting> AdditionalSettings { get; set; }
-        public string DisplayValue()
+
+        public string DisplayValue
         {
-            StringBuilder valueContent = new StringBuilder();
-            if ((Name == "Checkbox" || Name == "Radio" || Name == "Dropdown") && FieldOptions != null)
+            get
             {
-                valueContent.Append(string.Join("\r\n", FieldOptions.Where(m => m.Selected ?? false).Select(m => m.DisplayText)));
+                StringBuilder valueContent = new StringBuilder();
+                if ((Name == "Checkbox" || Name == "Radio" || Name == "Dropdown") && FieldOptions != null)
+                {
+                    valueContent.Append(string.Join("\r\n", FieldOptions.Where(m => m.Selected ?? false).Select(m => m.DisplayText)));
+                }
+                else if (Name == "Address" && Value.IsNotNullAndWhiteSpace())
+                {
+                    valueContent.Append(string.Join(" ", Easy.Serializer.JsonConverter.Deserialize<string[]>(Value)));
+                }
+                else
+                {
+                    valueContent.Append(Value);
+                }
+                return valueContent.ToString();
             }
-            else if (Name == "Address" && Value.IsNotNullAndWhiteSpace())
-            {
-                valueContent.Append(string.Join(" ", JsonConvert.DeserializeObject<string[]>(Value)));
-            }
-            else
-            {
-                valueContent.Append(Value);
-            }
-            return valueContent.ToString();
         }
     }
 }

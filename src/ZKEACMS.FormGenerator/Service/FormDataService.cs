@@ -1,43 +1,43 @@
-using Easy.RepositoryPattern;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ZKEACMS.FormGenerator.Models;
-using Microsoft.EntityFrameworkCore;
-using Easy;
-using Microsoft.AspNetCore.Http;
-using System.Text.RegularExpressions;
-using Easy.Extend;
-using Newtonsoft.Json;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using DocumentFormat.OpenXml;
-using System.IO;
+using Easy;
 using Easy.DataTransfer;
+using Easy.Extend;
+using Easy.RepositoryPattern;
+using Easy.Serializer;
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using ZKEACMS.Event;
+using ZKEACMS.FormGenerator.Models;
 using ZKEACMS.FormGenerator.Service.Validator;
-using Easy.Notification;
 
 namespace ZKEACMS.FormGenerator.Service
 {
-    public class FormDataService : ServiceBase<FormData, CMSDbContext>, IFormDataService
+    public partial class FormDataService : ServiceBase<FormData, CMSDbContext>, IFormDataService
     {
         private readonly IFormService _formService;
         private readonly IFormDataItemService _formDataItemService;
         private readonly IEnumerable<IFormDataValidator> _formDataValidators;
-        private readonly INotificationManager _notificationManager;
+        private readonly IEventManager _eventManager;
+
         public FormDataService(IApplicationContext applicationContext,
             CMSDbContext dbContext,
             IFormService formService,
             IFormDataItemService formDataItemService,
             IEnumerable<IFormDataValidator> formDataValidators,
-            INotificationManager notificationManager) :
+            ILocalize localize, IEventManager eventManager) :
             base(applicationContext, dbContext)
         {
             _formService = formService;
             _formDataItemService = formDataItemService;
             _formDataValidators = formDataValidators;
-            _notificationManager = notificationManager;
+            _eventManager = eventManager;
         }
 
         public override ServiceResult<FormData> Add(FormData item)
@@ -62,6 +62,12 @@ namespace ZKEACMS.FormGenerator.Service
             var formData = base.Get(primaryKey);
             formData.Form = _formService.Get(formData.FormId);
             formData.Datas = _formDataItemService.Get(m => m.FormDataId == formData.ID).ToList();
+            MergeDataToForm(formData);
+            return formData;
+        }
+
+        private void MergeDataToForm(FormData formData)
+        {
             if (formData.Form != null)
             {
                 foreach (var item in formData.Form.FormFields)
@@ -88,13 +94,13 @@ namespace ZKEACMS.FormGenerator.Service
                     }
                     else if (values.Count > 1)
                     {
-                        item.Value = JsonConvert.SerializeObject(values);
+                        item.Value = JsonConverter.Serialize(values);
                     }
 
                 }
             }
-            return formData;
         }
+
         public ServiceResult<FormData> SaveForm(IFormCollection formCollection, string formId)
         {
             var result = new ServiceResult<FormData>();
@@ -105,11 +111,10 @@ namespace ZKEACMS.FormGenerator.Service
                 return result;
             }
             var formData = new FormData { FormId = formId, Datas = new List<FormDataItem>(), Form = form };
-            Regex regex = new Regex(@"(\w+)\[(\d+)\]");
 
             foreach (var item in formCollection.Keys)
             {
-                string id = regex.Replace(item, evaluator =>
+                string id = RegexName().Replace(item, evaluator =>
                 {
                     return evaluator.Groups[1].Value;
                 });
@@ -131,27 +136,27 @@ namespace ZKEACMS.FormGenerator.Service
                     {
                         if (!validator.Validate(field, dataitem, out string message))
                         {
-                            result.RuleViolations.Add(new RuleViolation(field.DisplayName, message));
-                            return result;
+                            result.RuleViolations.Add(new RuleViolation(item, message));
                         }
                     }
                     formData.Datas.Add(dataitem);
                 }
+            }
+            MergeDataToForm(formData);
+            result.Result = formData;
+            if (result.HasViolation)
+            {
+                return result;
             }
             if (formData.Datas.Any())
             {
                 formData.Title = formData.Datas.FirstOrDefault().FieldValue;
             }
             result = Add(formData);
-            if (!result.HasViolation && form.NotificationReceiver.IsNotNullAndWhiteSpace())
+            if (!result.HasViolation)
             {
-                _notificationManager.Send(new RazorEmailNotice
-                {
-                    Subject = "新的表单提醒",
-                    To = form.NotificationReceiver.Split(new char[] { '\r', '\n', ',', ';' }, StringSplitOptions.RemoveEmptyEntries),
-                    Model = Get(formData.ID),
-                    TemplatePath = "~/wwwroot/Plugins/ZKEACMS.FormGenerator/EmailTemplates/FormDataNotification.cshtml"
-                });
+                FormData data = Get(formData.ID);
+                _eventManager.Trigger(Events.OnFormDataSubmitted, data);
             }
             return result;
         }
@@ -177,7 +182,7 @@ namespace ZKEACMS.FormGenerator.Service
                 {
                     foreach (var item in formData.Form.FormFields)
                     {
-                        row.AppendCell(item.DisplayValue());
+                        row.AppendCell(item.DisplayValue);
                     }
                 });
                 return excel.ToMemoryStream();
@@ -203,12 +208,15 @@ namespace ZKEACMS.FormGenerator.Service
                     {
                         foreach (var item in Get(data.ID).Form.FormFields)
                         {
-                            row.AppendCell(item.DisplayValue());
+                            row.AppendCell(item.DisplayValue);
                         }
                     });
                 }
                 return excel.ToMemoryStream();
             }
         }
+
+        [GeneratedRegex("(\\w+)\\[(\\d+)\\]", RegexOptions.Compiled)]
+        private static partial Regex RegexName();
     }
 }

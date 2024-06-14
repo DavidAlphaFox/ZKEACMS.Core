@@ -1,8 +1,7 @@
 /* http://www.zkea.net/ 
- * Copyright 2017 ZKEASOFT 
- * http://www.zkea.net/licenses 
- *
- */
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.Mvc.Resource;
 using Easy.Mvc.Route;
 using System;
@@ -24,6 +23,20 @@ namespace ZKEACMS.FormGenerator
         {
             yield return new RouteDescriptor
             {
+                RouteName = "EditTemplate",
+                Template = "Admin/FormGenerator/EditTemplate/{template}",
+                Defaults = new { controller = "EditTemplate", action = "TemplateView" },
+                Priority = 11
+            };
+            yield return new RouteDescriptor
+            {
+                RouteName = "PreviewTemplate",
+                Template = "Admin/FormGenerator/PreviewTemplate/{template}",
+                Defaults = new { controller = "PreviewTemplate", action = "TemplateView" },
+                Priority = 11
+            };
+            yield return new RouteDescriptor
+            {
                 RouteName = "FormData",
                 Template = "FormDataHandle/Submit",
                 Defaults = new { controller = "FormData", action = "Submit" },
@@ -35,20 +48,20 @@ namespace ZKEACMS.FormGenerator
         {
             yield return new AdminMenu
             {
-                Title = "自定义表单",
+                Title = "Form Generator",
                 Children = new List<AdminMenu>
                 {
                     new AdminMenu
                     {
-                        Title="表单",
-                        Url="~/Admin/Form",
+                        Title="Form",
+                        Url="~/admin/form",
                         Icon="glyphicon-list-alt",
                         PermissionKey=PermissionKeys.ViewForm
                     },
                     new AdminMenu
                     {
-                        Title="表单数据",
-                        Url="~/Admin/FormData",
+                        Title="Form Data",
+                        Url="~/admin/formdata",
                         Icon="glyphicon-record",
                         PermissionKey=PermissionKeys.ViewFormData
                     }
@@ -81,19 +94,19 @@ namespace ZKEACMS.FormGenerator
 
         public override IEnumerable<PermissionDescriptor> RegistPermission()
         {
-            yield return new PermissionDescriptor(PermissionKeys.ViewForm, "自定义表单", "查看表单", "");
-            yield return new PermissionDescriptor(PermissionKeys.ManageForm, "自定义表单", "管理表单", "");
-            yield return new PermissionDescriptor(PermissionKeys.ViewFormData, "自定义表单", "查看表单数据", "");
-            yield return new PermissionDescriptor(PermissionKeys.ManageFormData, "自定义表单", "管理表单数据", "");
-            yield return new PermissionDescriptor(PermissionKeys.ExportFormData, "自定义表单", "导出表单数据", "");
+            yield return new PermissionDescriptor(PermissionKeys.ViewForm, "Form Generator", "View Form", "");
+            yield return new PermissionDescriptor(PermissionKeys.ManageForm, "Form Generator", "Manage Form", "");
+            yield return new PermissionDescriptor(PermissionKeys.ViewFormData, "Form Generator", "View Form Data", "");
+            yield return new PermissionDescriptor(PermissionKeys.ManageFormData, "Form Generator", "Manage Form Data", "");
+            yield return new PermissionDescriptor(PermissionKeys.ExportFormData, "Form Generator", "Export Form Data", "");
         }
 
         public override IEnumerable<WidgetTemplateEntity> WidgetServiceTypes()
         {
             yield return new WidgetTemplateEntity<FormWidgetService>
             {
-                Title = "表单",
-                GroupName = "4.表单",
+                Title = "Form",
+                GroupName = "4.Form",
                 PartialView = "Widget.Form",
                 Thumbnail = "~/Plugins/ZKEACMS.FormGenerator/Content/images/Widget.Form.png",
                 Order = 1
@@ -110,10 +123,13 @@ namespace ZKEACMS.FormGenerator
             serviceCollection.AddTransient<IFormDataValidator, RequiredFormDataValidator>();
             serviceCollection.AddTransient<IFormDataValidator, MaxLengthFormDataValidator>();
             serviceCollection.AddTransient<IFormDataValidator, RegexPatternValidator>();
+            serviceCollection.AddTransient<IFormDataValidator, PhoneFormDataValidator>();
+            serviceCollection.AddTransient<IFormDataValidator, ValidCodeFormDataValidator>();
 
             serviceCollection.TryAddTransient<IFormService, FormService>();
             serviceCollection.TryAddTransient<IFormDataService, FormDataService>();
             serviceCollection.TryAddTransient<IFormDataItemService, FormDataItemService>();
+            serviceCollection.TryAddTransient<IFormDataApiService, FormDataApiService>();
 
             serviceCollection.ConfigureMetaData<Form, FormMetaData>();
             serviceCollection.ConfigureMetaData<FormData, FormDataMetaData>();
@@ -121,8 +137,8 @@ namespace ZKEACMS.FormGenerator
 
             serviceCollection.Configure<FormWidget>(option =>
             {
-                option.DataSourceLinkTitle = "表单";
-                option.DataSourceLink = "~/admin/Form";
+                option.DataSourceLinkTitle = "Form";
+                option.DataSourceLink = "~/admin/form";
             });            
         }
     }

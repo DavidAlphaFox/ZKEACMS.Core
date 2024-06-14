@@ -1,15 +1,11 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2017 ZKEASOFT
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
-using System.Data.Common;
-using Easy.RepositoryPattern;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using System;
+using System.Data.Common;
 using ZKEACMS.DbConnectionPool;
 using ZKEACMS.Options;
 
@@ -38,11 +34,7 @@ namespace ZKEACMS
                     }
                 case Easy.DbTypes.MsSqlEarly:
                     {
-                        if (dbConnectionForReusing != null)
-                            optionsBuilder.UseSqlServer(dbConnectionForReusing, option => option.UseRowNumberForPaging());
-                        else
-                            optionsBuilder.UseSqlServer(_dataBaseOption.ConnectionString, option => option.UseRowNumberForPaging());
-                        break;
+                        throw new Exception("Starting with EF Core 3.0, EF will only generate SQL for paging that is only compatible with later SQL Server versions. Because SQL Server 2008 is no longer a supported product.");
                     }
                 case Easy.DbTypes.Sqlite:
                     {
@@ -55,14 +47,13 @@ namespace ZKEACMS
                 case Easy.DbTypes.MySql:
                     {
                         if (dbConnectionForReusing != null)
-                            optionsBuilder.UseMySql(dbConnectionForReusing);
+                            optionsBuilder.UseMySql(dbConnectionForReusing, ServerVersion.AutoDetect(dbConnectionForReusing as MySqlConnector.MySqlConnection));
                         else
-                            optionsBuilder.UseMySql(_dataBaseOption.ConnectionString);
+                            optionsBuilder.UseMySql(_dataBaseOption.ConnectionString , ServerVersion.AutoDetect(_dataBaseOption.ConnectionString));
                         break;
                     }
             }
-
-            optionsBuilder.ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning));
+            
             optionsBuilder.UseLoggerFactory(_loggerFactory);
         }
     }

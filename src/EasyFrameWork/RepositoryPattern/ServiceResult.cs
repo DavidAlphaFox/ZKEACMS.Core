@@ -1,13 +1,14 @@
 /* http://www.zkea.net/ 
  * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Easy.RepositoryPattern
 {
-    public class ServiceResult<T>
+    public class ServiceResult
     {
         public ServiceResult()
         {
@@ -18,7 +19,14 @@ namespace Easy.RepositoryPattern
             get;
             private set;
         }
-
+        public void AddRuleViolation(string message)
+        {
+            RuleViolations.Add(new RuleViolation(string.Empty, message));
+        }
+        public void AddRuleViolation(string name, string message)
+        {
+            RuleViolations.Add(new RuleViolation(name, message));
+        }
         public bool HasViolation
         {
             get { return RuleViolations != null && RuleViolations.Count > 0; }
@@ -40,6 +48,18 @@ namespace Easy.RepositoryPattern
                 }
                 return msg;
             }
+        }
+    }
+    public class ServiceResult<T> : ServiceResult
+    {
+        public ServiceResult() { }
+        public ServiceResult(T result)
+        {
+            Result = result;
+        }
+        public static implicit operator ServiceResult<T>(T result)
+        {
+            return new ServiceResult<T>(result);
         }
         public T Result { get; set; }
     }

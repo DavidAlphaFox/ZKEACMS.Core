@@ -4,18 +4,19 @@
 }
 <div class="panel panel-default">
     <div class="panel-heading">
-        @L("新建")
+        @L("New")
     </div>
     <div class="panel-body">
         @using (Html.BeginForm())
         {
+            @Html.Hidden("ActionType")
             <div class="form-horizontal">
                 <div class="form-group">
                     <div class="col-md-12 col-lg-2">
-                        <label class="control-label">@L("翻译键")</label>
+                        <label class="control-label">@L("Translation Key")</label>
                     </div>
                     <div class="col-md-12 col-lg-10">
-                        <input class="form-control required valid" data-val="true" data-val-required="@L("请输入翻译键")" id="LanKey" name="LanKey" type="text" value="@ViewBag.LanKey">
+                        <input class="form-control required valid" data-val="true" data-val-required="@L("{0} is required").Text.FormatWith(L("Translation Key"))" id="LanKey" name="LanKey" type="text" value="@ViewBag.LanKey">
                         @Html.ValidationMessage("LanKey")
                     </div>
                 </div>
@@ -24,13 +25,13 @@
                     var item = Model[i];
                     <div class="form-group">
                         <div class="col-md-12 col-lg-2">
-                            <label class="control-label">@L("翻译内容")</label>
+                            <label class="control-label" for="@Html.Id("["+ i +"].LanValue")">@item.CultureName</label>
                         </div>
                         <div class="col-md-12 col-lg-10">
                             <input type="hidden" name="[@i].CultureName" value="@item.CultureName" />
                             <input type="hidden" name="[@i].LanKey" value="@item.LanKey" />
                             <input type="hidden" name="[@i].LanType" value="@item.LanType" />
-                            <textarea class="form-control" rows="3" name="[@i].LanValue">@item.LanValue</textarea>
+                            <textarea class="form-control" rows="3" id="@Html.Id("["+ i +"].LanValue")" name="[@i].LanValue">@item.LanValue</textarea>
                         </div>
                     </div>
                 }
@@ -38,9 +39,10 @@
             <div class="toolBar">
                 @if (Authorizer.Authorize(PermissionKeys.ManageApplicationSetting))
                 {
-                    <input type="submit" class="btn btn-primary" value="@L("保存")" data-value="@ActionType.Update" />
+                    <input type="submit" class="btn btn-primary" value="@L("Save")" data-value="@ActionType.Create" />
+                    <input type="submit" class="btn btn-primary" value="@L("Save And Exit")" data-value="@ActionType.CreateAndExit" />
                 }
-                <input type="button" class="btn btn-default cancel" value="@L("取消")" />
+                <a class="btn btn-default" href="@Url.Action("Index")">@L("Cancel")</a>
             </div>
         }
     </div>

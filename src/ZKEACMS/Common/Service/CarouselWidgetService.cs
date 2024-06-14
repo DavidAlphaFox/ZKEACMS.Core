@@ -1,5 +1,5 @@
 /* http://www.zkea.net/ 
- * Copyright 2017 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
 
 using Easy;
@@ -19,7 +19,6 @@ namespace ZKEACMS.Common.Service
     {
         private readonly ICarouselItemService _carouselItemService;
 
-
         public CarouselWidgetService(IWidgetBasePartService widgetService, ICarouselItemService carouselItemService, IApplicationContext applicationContext, CMSDbContext dbContext)
             : base(widgetService, applicationContext, dbContext)
         {
@@ -36,79 +35,103 @@ namespace ZKEACMS.Common.Service
             carouselWidget.CarouselItems.Each(m => m.ActionType = ActionType.Update);
             return carouselWidget;
         }
-
-        public override void AddWidget(WidgetBase widget)
+        public override ServiceResult<CarouselWidget> Add(CarouselWidget item)
         {
-            base.AddWidget(widget);
-            var item = widget as CarouselWidget;
-            if (item.CarouselItems != null && item.CarouselItems.Any())
+            return BeginTransaction(() =>
             {
-                _carouselItemService.BeginBulkSave();
-                item.CarouselItems.Each(m =>
+                var result = base.Add(item);
+                if (item.CarouselItems != null && item.CarouselItems.Any())
                 {
-                    if (m.ActionType != ActionType.Delete)
+                    _carouselItemService.BeginBulkSave();
+                    item.CarouselItems.Each(m =>
                     {
-                        _carouselItemService.Add(new CarouselItemEntity
+                        if (!m.ActionType.HasFlag(ActionType.Delete))
                         {
-                            CarouselID = m.CarouselID,
-                            Title = m.Title,
-                            CarouselWidgetID = item.ID,
-                            TargetLink = m.TargetLink,
-                            ImageUrl = m.ImageUrl,
-                            Status = m.Status
-                        });
-                    }
-                });
-                _carouselItemService.SaveChanges();
-            }
+                            _carouselItemService.Add(new CarouselItemEntity
+                            {
+                                CarouselID = m.CarouselID,
+                                Title = m.Title,
+                                CarouselWidgetID = item.ID,
+                                TargetLink = m.TargetLink,
+                                ImageUrl = m.ImageUrl,
+                                Status = m.Status
+                            });
+                        }
+                    });
+                    _carouselItemService.EndBulkSave();
+                }
+                return result;
+            });
 
         }
+
         public override void UpdateWidget(WidgetBase widget)
         {
-            base.UpdateWidget(widget);
-            var item = widget as CarouselWidget;
-            if (item.CarouselItems != null && item.CarouselItems.Any())
+            BeginTransaction(() =>
             {
-                _carouselItemService.BeginBulkSave();
-                item.CarouselItems.Each(m =>
+                base.UpdateWidget(widget);
+                var item = widget as CarouselWidget;
+                if (item.CarouselItems != null && item.CarouselItems.Any())
                 {
-                    m.CarouselWidgetID = item.ID;
-                    if (m.ActionType == ActionType.Create)
+                    _carouselItemService.BeginBulkSave();
+                    item.CarouselItems.Each(m =>
                     {
-                        _carouselItemService.Add(m);
-                    }
-                    else if (m.ActionType == ActionType.Delete)
-                    {
-                        if (m.ID > 0)
+                        m.CarouselWidgetID = item.ID;
+                        if (m.ActionType.HasFlag(ActionType.Create))
                         {
-                            _carouselItemService.Remove(m);
-                        }                        
-                    }
-                    else
-                    {
-                        _carouselItemService.Update(m);
-                    }
-                });
-                _carouselItemService.SaveChanges();
-            }
+                            _carouselItemService.Add(m);
+                        }
+                        else if (m.ActionType.HasFlag(ActionType.Delete))
+                        {
+                            if (m.ID > 0)
+                            {
+                                _carouselItemService.Remove(m);
+                            }
+                        }
+                        else
+                        {
+                            _carouselItemService.Update(m);
+                        }
+                    });
+                    _carouselItemService.EndBulkSave();
+                }
+            });
         }
-
 
         public override void DeleteWidget(string widgetId)
         {
-            _carouselItemService.Remove(m => m.CarouselWidgetID == widgetId);
-            base.DeleteWidget(widgetId);
+            BeginTransaction(() =>
+            {
+                _carouselItemService.Remove(m => m.CarouselWidgetID == widgetId);
+                base.DeleteWidget(widgetId);
+            });
+
         }
 
-        public override WidgetViewModelPart Display(WidgetBase widget, ActionContext actionContext)
+        public override object Display(WidgetDisplayContext widgetDisplayContext)
         {
-            var carouselWidget = widget as CarouselWidget;
+            var carouselWidget = widgetDisplayContext.Widget as CarouselWidget;
+            if (carouselWidget.CarouselItems == null)
+            {
+                carouselWidget.CarouselItems = new List<CarouselItemEntity>();
+            }
             if (carouselWidget.CarouselID.HasValue)
             {
-                carouselWidget.CarouselItems = _carouselItemService.Get(m => m.CarouselID == carouselWidget.CarouselID);
+                carouselWidget.CarouselItems = carouselWidget.CarouselItems.Concat(_carouselItemService.Get(m => m.CarouselID == carouselWidget.CarouselID));
             }
             carouselWidget.CarouselItems = carouselWidget.CarouselItems.Where(m => m.Status == (int)RecordStatus.Active);
-            return base.Display(widget, actionContext);
+            return carouselWidget;
+        }
+
+        protected override IEnumerable<string> GetFilesInWidget(CarouselWidget widget)
+        {
+            var items = widget.CarouselItems;
+            if (items == null) Enumerable.Empty<string>();
+
+            foreach (var item in items)
+            {
+                yield return item.ImageUrl;
+            }
         }
     }
 }

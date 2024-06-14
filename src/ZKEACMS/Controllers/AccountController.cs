@@ -1,5 +1,5 @@
 /* http://www.zkea.net/ 
- * Copyright 2017 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
 
 using Easy.Constant;
@@ -7,9 +7,7 @@ using Easy.Extend;
 using Easy.Modules.User.Models;
 using Easy.Modules.User.Service;
 using Easy.Mvc.Authorize;
-using ZKEACMS.Notification;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Security.Claims;
@@ -18,28 +16,37 @@ using Microsoft.AspNetCore.DataProtection;
 using ZKEACMS.Account;
 using Microsoft.Extensions.Logging;
 using Easy.Mvc.Extend;
+using ZKEACMS.Common.ViewModels;
+using Easy;
+using ZKEACMS.Event;
 
 namespace ZKEACMS.Controllers
 {
     public class AccountController : Controller
     {
         private readonly IUserService _userService;
-        private readonly INotifyService _notifyService;
         private readonly IDataProtectionProvider _dataProtectionProvider;
         private readonly IApplicationContextAccessor _applicationContextAccessor;
         private readonly ILogger<AccountController> _logger;
+        private readonly ILocalize _localize;
+        private readonly IEventManager _eventManager;
+        private readonly IHostOptionProvider _hostOptionProvider;
 
         public AccountController(IUserService userService,
-            INotifyService notifyService,
             IDataProtectionProvider dataProtectionProvider,
             ILogger<AccountController> logger,
-            IApplicationContextAccessor applicationContextAccessor)
+            IApplicationContextAccessor applicationContextAccessor,
+            ILocalize localize,
+            IEventManager eventManager,
+            IHostOptionProvider hostOptionProvider)
         {
             _userService = userService;
-            _notifyService = notifyService;
             _dataProtectionProvider = dataProtectionProvider;
             _applicationContextAccessor = applicationContextAccessor;
             _logger = logger;
+            _localize = localize;
+            _eventManager = eventManager;
+            _hostOptionProvider = hostOptionProvider;
         }
         #region Admin
         public ActionResult Login()
@@ -47,25 +54,32 @@ namespace ZKEACMS.Controllers
             return View();
         }
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<ActionResult> Login(string userName, string password, string ReturnUrl)
+        public async Task<ActionResult> Login(AdminSignViewModel model, string ReturnUrl)
         {
-            var user = _userService.Login(userName, password, UserType.Administrator, Request.HttpContext.Connection.RemoteIpAddress.ToString());
-            if (user != null)
+            if (ModelState.IsValid)
             {
-
-                user.AuthenticationType = DefaultAuthorizeAttribute.DefaultAuthenticationScheme;
-                var identity = new ClaimsIdentity(user);
-                identity.AddClaim(new Claim(ClaimTypes.Name, user.UserID));
-                await HttpContext.SignInAsync(DefaultAuthorizeAttribute.DefaultAuthenticationScheme, new ClaimsPrincipal(identity));
-
-                if (ReturnUrl.IsNullOrEmpty() || !Url.IsLocalUrl(ReturnUrl))
+                var user = _userService.Login(model.UserID, model.PassWord, UserType.Administrator, Request.HttpContext.Connection.RemoteIpAddress?.ToString());
+                if (user != null)
                 {
-                    return RedirectToAction("Index", "Dashboard");
+
+                    user.AuthenticationType = DefaultAuthorizeAttribute.DefaultAuthenticationScheme;
+                    var identity = new ClaimsIdentity(user);
+                    identity.AddClaim(new Claim(ClaimTypes.Name, user.UserID));
+                    await HttpContext.SignInAsync(DefaultAuthorizeAttribute.DefaultAuthenticationScheme, new ClaimsPrincipal(identity));
+
+                    if (ReturnUrl.IsNullOrEmpty() || !Url.IsLocalUrl(ReturnUrl))
+                    {
+                        return RedirectToAction("Index", "Dashboard");
+                    }
+                    return Redirect(ReturnUrl);
                 }
-                return Redirect(ReturnUrl);
+                else
+                {
+                    ModelState.AddModelError("PassWord", _localize.Get("User name password is incorrect"));
+                }
             }
-            ViewBag.Errormessage = "登录失败，用户名密码不正确";
-            return View();
+
+            return View(model);
         }
 
         public async Task<ActionResult> Logout(string returnurl)
@@ -107,7 +121,7 @@ namespace ZKEACMS.Controllers
                     return View(user);
                 }
             }
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "Account");
         }
         [CustomerAuthorize]
         public ActionResult PassWord()
@@ -122,9 +136,9 @@ namespace ZKEACMS.Controllers
             {
                 logOnUser.PassWordNew = user.PassWordNew;
                 _userService.Update(logOnUser);
-                return RedirectToAction("SignOut", new { returnurl = "~/Account/SignIn" });
+                return RedirectToAction("SignOut", "Account", new { returnurl = "~/Account/SignIn" });
             }
-            ViewBag.Message = "原密码错误";
+            ViewBag.Message = _localize.Get("Current password is not correct.");
             return View();
         }
         public ActionResult SignIn(string ReturnUrl)
@@ -133,25 +147,31 @@ namespace ZKEACMS.Controllers
             return View();
         }
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<ActionResult> SignIn(string email, string password, string ReturnUrl)
+        public async Task<ActionResult> SignIn(CustomerSignInViewModel model, string ReturnUrl)
         {
-            var user = _userService.Login(email, password, UserType.Customer, Request.HttpContext.Connection.RemoteIpAddress.ToString());
-            if (user != null)
+            if (ModelState.IsValid)
             {
-                user.AuthenticationType = CustomerAuthorizeAttribute.CustomerAuthenticationScheme;
-                var identity = new ClaimsIdentity(user);
-                identity.AddClaim(new Claim(ClaimTypes.Name, user.UserID));
-                await HttpContext.SignInAsync(CustomerAuthorizeAttribute.CustomerAuthenticationScheme, new ClaimsPrincipal(identity));
-
-                if (ReturnUrl.IsNullOrEmpty() || !Url.IsLocalUrl(ReturnUrl))
+                var user = _userService.Login(model.Email, model.PassWord, UserType.Customer, Request.HttpContext.Connection.RemoteIpAddress.ToString());
+                if (user != null)
                 {
-                    return RedirectToAction("Index");
+                    user.AuthenticationType = CustomerAuthorizeAttribute.CustomerAuthenticationScheme;
+                    var identity = new ClaimsIdentity(user);
+                    identity.AddClaim(new Claim(ClaimTypes.Name, user.UserID));
+                    await HttpContext.SignInAsync(CustomerAuthorizeAttribute.CustomerAuthenticationScheme, new ClaimsPrincipal(identity));
+
+                    if (ReturnUrl.IsNullOrEmpty() || !Url.IsLocalUrl(ReturnUrl))
+                    {
+                        return RedirectToAction("Index", "Account");
+                    }
+                    return Redirect(ReturnUrl);
                 }
-                return Redirect(ReturnUrl);
+                else
+                {
+                    ModelState.AddModelError("PassWord", _localize.Get("User name password is incorrect"));
+                }
             }
-            ViewBag.Errormessage = "登录失败，用户名密码不正确";
             ViewBag.ReturnUrl = ReturnUrl;
-            return View();
+            return View(model);
         }
 
         public async Task<ActionResult> SignOut(string returnurl)
@@ -161,7 +181,7 @@ namespace ZKEACMS.Controllers
             {
                 return Redirect(returnurl);
             }
-            return RedirectToAction("SignIn");
+            return RedirectToAction("SignIn", "Account");
         }
         public ActionResult SignUp(string ReturnUrl)
         {
@@ -186,30 +206,34 @@ namespace ZKEACMS.Controllers
                 }
 
             }
-            return RedirectToAction("SignUpSuccess", new { ReturnUrl });
+            return RedirectToAction("SignUpSuccess", "Account", new { ReturnUrl });
         }
         public ActionResult SignUpSuccess()
         {
             return View();
         }
 
-        public ActionResult Forgotten()
+        public ActionResult Forgotten(UserType? userType)
         {
-            return View();
+            return View(new ForgottenViewModel { UserType = userType ?? UserType.Customer });
         }
         [HttpPost, ValidateAntiForgeryToken]
-        public ActionResult Forgotten(string Email)
+        public ActionResult Forgotten(ForgottenViewModel model)
         {
-            if (Email.IsNotNullAndWhiteSpace())
+            if (ModelState.IsValid)
             {
-                var user = _userService.SetResetToken(Email, UserType.Customer);
+                var user = _userService.SetResetToken(model.Email, model.UserType);
                 if (user != null)
                 {
-                    _notifyService.ResetPassword(user);
+                    _eventManager.Trigger(Events.OnResetPassword, new ResetPasswordEmailViewModel
+                    {
+                        Email = user.Email,
+                        Link = $"{_hostOptionProvider.GetOrigin()}/Account/Reset?token={user.ResetToken}&pt={GetPasswordProtector().Protect(user.ResetToken)}"
+                    });
                 }
-                return RedirectToAction("Sended", new { to = Email, status = (user != null ? 1 : 2) });
+                return RedirectToAction("Sended", "Account", new { to = model.Email, status = (user != null ? 1 : 2) });
             }
-            return RedirectToAction("Forgotten");
+            return RedirectToAction("Forgotten", "Account");
         }
 
         public ActionResult Sended(string to)
@@ -221,16 +245,16 @@ namespace ZKEACMS.Controllers
         {
             try
             {
-                var dataProtector = _dataProtectionProvider.CreateProtector("ResetPassword");
+                var dataProtector = GetPasswordProtector();
                 if (pt.IsNullOrWhiteSpace() || dataProtector.Unprotect(pt) != token)
                 {
-                    ViewBag.Errormessage = "访问的重置链接无效，请重新申请";
+                    ViewBag.Errormessage = _localize.Get("Invalid request");
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.ToString());
-                ViewBag.Errormessage = "访问的重置链接无效，请重新申请";
+                ViewBag.Errormessage = _localize.Get("Invalid request");
             }
             return View(new ResetViewModel { ResetToken = token, Protect = pt });
         }
@@ -239,21 +263,30 @@ namespace ZKEACMS.Controllers
         {
             try
             {
-                var dataProtector = _dataProtectionProvider.CreateProtector("ResetPassword");
-                if (user.Protect.IsNotNullAndWhiteSpace() && dataProtector.Unprotect(user.Protect) == user.ResetToken)
+                if (ModelState.IsValid)
                 {
-                    if (_userService.ResetPassWord(user.ResetToken, user.PassWordNew))
+                    IDataProtector dataProtector = GetPasswordProtector();
+                    if (user.Protect.IsNotNullAndWhiteSpace() && dataProtector.Unprotect(user.Protect) == user.ResetToken)
                     {
-                        return RedirectToAction("SignIn");
+                        if (_userService.ResetPassWord(user.ResetToken, user.PassWordNew))
+                        {
+                            return RedirectToAction("SignIn", "Account");
+                        }
                     }
                 }
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.ToString());
             }
-            ViewBag.Errormessage = "重置密码失败";
+            ViewBag.Errormessage = _localize.Get("Reset password failed!");
             return View(user);
+        }
+
+        private IDataProtector GetPasswordProtector()
+        {
+            return _dataProtectionProvider.CreateProtector("ResetPassword");
         }
         #endregion
     }

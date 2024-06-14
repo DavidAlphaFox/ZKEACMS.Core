@@ -1,5 +1,5 @@
 /* http://www.zkea.net/ 
- * Copyright 2017 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
 
 using Easy.RepositoryPattern;
@@ -42,6 +42,7 @@ namespace ZKEACMS
             modelBuilder.Entity<StyleSheetWidget>();
             modelBuilder.Entity<VideoWidget>();
             modelBuilder.Entity<Rule.Rule>();
+            modelBuilder.Entity<Currency.CurrencyEntry>();
         }
     }
 }

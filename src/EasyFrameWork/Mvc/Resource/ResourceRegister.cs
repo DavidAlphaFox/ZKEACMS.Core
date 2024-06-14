@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.Mvc.RazorPages;
 using Easy.Mvc.Resource.Enums;
 using System;
@@ -39,7 +42,7 @@ namespace Easy.Mvc.Resource
         {
             this._page = page;
             _position = position;
-            this._page.StartTagHelperWritingScope(HtmlEncoder.Default);
+            this._page.StartTagHelperWritingScope(page.HtmlEncoder);
             _onRegisted = onRegisted;
         }
 

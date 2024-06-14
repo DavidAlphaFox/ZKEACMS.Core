@@ -20,7 +20,7 @@ tinymce.PluginManager.add('imagelocal', function (editor) {
                             url = url.split("?")[0];
                         }
                         if (url.indexOf("/") != 0 && url.replace("http://", "").replace("https://", "").indexOf(window.location.hostname) != 0) {
-                            if (imageUrls.indexOf(url)) {
+                            if (imageUrls.indexOf(url) < 0) {
                                 imageUrls.push(url);
                                 imageIndexed[url] = [$(this)];
                             }
@@ -58,11 +58,9 @@ tinymce.PluginManager.add('imagelocal', function (editor) {
 
     }
 
-    editor.addMenuItem('insertimagelocal', {
+    editor.ui.registry.addButton('imagelocal', {
         icon: 'upload',
-        text: '迁移外链图',
-        context: 'edit',
-        onclick: download,
-        prependToContext: false
+        tooltip: '转存外链图',
+        onAction: download
     });
 });

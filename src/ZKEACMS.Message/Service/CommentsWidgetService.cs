@@ -1,8 +1,6 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2018 ZKEASOFT
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using Easy;
 using Easy.Constant;
@@ -19,9 +17,11 @@ namespace ZKEACMS.Message.Service
         {
             _commentsService = commentsService;
         }
-        public override WidgetViewModelPart Display(WidgetBase widget, ActionContext actionContext)
+        public override object Display(WidgetDisplayContext widgetDisplayContext)
         {
-            return widget.ToWidgetViewModelPart(_commentsService.Get(m => m.PagePath == actionContext.HttpContext.Request.Path.Value && m.Status == (int)RecordStatus.Active));
+            var actionContext = widgetDisplayContext.ActionContext;
+            var comments = _commentsService.Get(m => m.PagePath == actionContext.HttpContext.Request.Path.Value && m.Status == (int)RecordStatus.Active);
+            return comments;
         }
     }
 }

@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
 using System.Collections.Generic;
 using Easy.MetaData;
@@ -24,8 +27,10 @@ namespace ZKEACMS.SectionWidget.Models
         protected override void ViewConfigure()
         {
             base.ViewConfigure();
+            ViewConfig(m => m.PartialView).AsHidden();
             ViewConfig(m => m.SectionTitle).AsHidden();
             ViewConfig(m => m.Template).AsHidden().Ignore();
+            ViewConfig(m => m.Groups).AsHidden().Ignore();
         }
     }
 }

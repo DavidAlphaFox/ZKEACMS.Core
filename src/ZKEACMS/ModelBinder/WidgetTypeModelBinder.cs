@@ -1,8 +1,8 @@
 /* http://www.zkea.net/ 
- * Copyright 2018 ZKEASOFT 
- * http://www.zkea.net/licenses 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * https://github.com/aspnet/Mvc/blob/dev/src/Microsoft.AspNetCore.Mvc.Core/ModelBinding/Binders/ComplexTypeModelBinder.cs
- */
+ * http://www.zkea.net/licenses */
+
 using Easy;
 using Easy.MetaData;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -95,7 +95,10 @@ namespace ZKEACMS.ModelBinder
                         {
                             if (!valid.Validate(bindingContext.ModelState[modelName].RawValue))
                             {
-                                valid.DisplayName = descriptor.DisplayName;
+                                if (valid.DisplayName == null)
+                                {
+                                    valid.DisplayName = () => descriptor.DisplayName;
+                                }
                                 bindingContext.ModelState[modelName].Errors.Clear();
                                 bindingContext.ModelState.TryAddModelError(modelName, valid.ErrorMessage);
                                 break;
@@ -115,7 +118,7 @@ namespace ZKEACMS.ModelBinder
                 foreach (var item in bindingContext.ModelState.Keys)
                 {
                     bindingContext.ModelState.MarkFieldValid(item);
-                }                
+                }
             }
             bindingContext.Result = ModelBindingResult.Success(bindingContext.Model);
         }
@@ -145,7 +148,7 @@ namespace ZKEACMS.ModelBinder
 
             return true;
         }
-        
+
         internal bool CanCreateModel(ModelBindingContext bindingContext)
         {
             var isTopLevelObject = bindingContext.IsTopLevelObject;
@@ -296,7 +299,10 @@ namespace ZKEACMS.ModelBinder
                     {
                         if (!valid.Validate(value))
                         {
-                            valid.DisplayName = descriptor.DisplayName;
+                           if(valid.DisplayName == null)
+                            {
+                                valid.DisplayName = () => descriptor.DisplayName;
+                            }
                             if (bindingContext.ModelState.ContainsKey(modelName))
                             {
                                 bindingContext.ModelState[modelName].Errors.Clear();

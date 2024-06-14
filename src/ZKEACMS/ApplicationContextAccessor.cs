@@ -1,6 +1,7 @@
 /* http://www.zkea.net/ 
  * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using Easy;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,7 @@ namespace ZKEACMS
         {
             get
             {
-                return current ?? (current = _serviceProvider.GetService<IApplicationContext>().As<CMSApplicationContext>());
+                return current ?? (current = _serviceProvider.GetService<IApplicationContext>().CurrentAppContext());
             }
         }
     }

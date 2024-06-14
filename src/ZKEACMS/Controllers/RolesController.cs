@@ -1,8 +1,6 @@
-/* 
- * http://www.zkea.net/ 
- * Copyright 2017 ZKEASOFT 
- * http://www.zkea.net/licenses 
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +38,11 @@ namespace ZKEACMS.Controllers
                 }
                 return View(entity);
             }
-            return RedirectToAction("Index");
+            if (entity.ActionType.HasFlag(ActionType.Exit))
+            {
+                return RedirectToAction("Index");
+            }
+            return RedirectToAction("Edit", new { Id = entity.ID });
         }
         public override IActionResult Edit(int Id)
         {
@@ -67,7 +69,11 @@ namespace ZKEACMS.Controllers
                 }
                 return View(entity);
             }
-            return RedirectToAction("Index");
+            if (entity.ActionType.HasFlag(ActionType.Exit))
+            {
+                return RedirectToAction("Index");
+            }
+            return RedirectToAction("Edit", new { Id = entity.ID });
         }
 
         [HttpPost, DefaultAuthorize(Policy = PermissionKeys.ManageRole)]

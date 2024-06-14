@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
 using Easy.MetaData;
 using Easy.Models;
@@ -8,6 +11,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Linq;
+using Easy;
 
 namespace ZKEACMS.WidgetTemplate
 {
@@ -23,7 +27,7 @@ namespace ZKEACMS.WidgetTemplate
         public virtual Type ViewModelType { get; set; }
         public string ViewModelTypeName { get { return ViewModelType.FullName; } }
         public int? Order { get; set; }
-
+        public string PluginName { get; set; }
         public string FormView { get; set; }
 
         public virtual WidgetBase ToWidget(IServiceProvider serviceProvider)
@@ -34,7 +38,8 @@ namespace ZKEACMS.WidgetTemplate
             widget.ViewModelTypeName = ViewModelTypeName;
             widget.Description = Description;
             widget.PartialView = PartialView;
-            widget.WidgetName = Title;
+            widget.WidgetName = serviceProvider.GetService<ILocalize>().Get(Title);
+            widget.FormView = FormView;
             return serviceProvider.GetService<IWidgetActivator>().CreateWidgetViewModel(widget);
         }
     }

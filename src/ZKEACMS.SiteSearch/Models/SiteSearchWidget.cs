@@ -1,3 +1,7 @@
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy;
 using Easy.MetaData;
 using Easy.Models;
@@ -21,6 +25,7 @@ namespace ZKEACMS.SiteSearch.Models
         protected override void ViewConfigure()
         {
             base.ViewConfigure();
+            ViewConfig(m => m.Title).AsHidden();
             ViewConfig(m => m.SearchEngine).AsDropDownList().DataSource(() =>
             {
                 var searchEngines = ServiceLocator.GetService<IEnumerable<SearchEngine>>();

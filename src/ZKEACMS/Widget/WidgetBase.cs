@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
 using System.Collections.Generic;
 using Easy.Extend;
@@ -10,6 +13,7 @@ using ZKEACMS.Common.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Easy;
+using Newtonsoft.Json;
 
 namespace ZKEACMS.Widget
 {
@@ -17,14 +21,15 @@ namespace ZKEACMS.Widget
     {
         public static Dictionary<string, Type> KnownWidgetModel { get; } = new Dictionary<string, Type>();
         public static Dictionary<string, Type> KnownWidgetService { get; } = new Dictionary<string, Type>();
+        private HashSet<string> availableZones = new HashSet<string>();
         [Key]
         public virtual string ID { get; set; }
         public virtual string WidgetName { get; set; }
         public virtual int? Position { get; set; }
-        public virtual string LayoutID { get; set; }
-        public virtual string PageID { get; set; }
+        public virtual string LayoutId { get; set; }
+        public virtual string PageId { get; set; }
         public virtual int? RuleID { get; set; }
-        public virtual string ZoneID { get; set; }
+        public virtual string ZoneId { get; set; }
         public virtual bool IsTemplate { get; set; }
         public virtual string Thumbnail { get; set; }
         public virtual bool IsSystem { get; set; }
@@ -36,7 +41,7 @@ namespace ZKEACMS.Widget
         public virtual string ExtendData { get; set; }
         public virtual string StyleClass { get; set; }
         private string _customClass;
-        [NotMapped]
+        [NotMapped, JsonIgnore]
         public string CustomClass
         {
             get
@@ -50,7 +55,7 @@ namespace ZKEACMS.Widget
             }
         }
         private string _customStyle;
-        [NotMapped]
+        [NotMapped, JsonIgnore]
         public string CustomStyle
         {
             get
@@ -63,9 +68,9 @@ namespace ZKEACMS.Widget
                 return _customStyle;
             }
         }
-        [NotMapped]
+        [NotMapped, JsonIgnore]
         public string DataSourceLink { get; set; }
-        [NotMapped]
+        [NotMapped, JsonIgnore]
         public string DataSourceLinkTitle { get; set; }
         private void InitStyleClass()
         {
@@ -75,29 +80,14 @@ namespace ZKEACMS.Widget
             }
             else
             {
-                _customClass = CustomRegex.StyleRegex.Replace(StyleClass, evaluator =>
+                _customClass = CustomRegex.CssStyle().Replace(StyleClass, evaluator =>
                 {
                     _customStyle = evaluator.Groups[1].Value;
                     return string.Empty;
                 });
             }
         }
-        public WidgetViewModelPart ToWidgetViewModelPart()
-        {
-            return new WidgetViewModelPart
-            {
-                Widget = this,
-                ViewModel = this
-            };
-        }
-        public WidgetViewModelPart ToWidgetViewModelPart(object viewModel)
-        {
-            return new WidgetViewModelPart
-            {
-                Widget = this,
-                ViewModel = viewModel
-            };
-        }
+
         public Type GetViewModelType()
         {
             string key = $"{AssemblyName},{ViewModelTypeName}";
@@ -128,8 +118,8 @@ namespace ZKEACMS.Widget
             widget.LastUpdateBy = LastUpdateBy;
             widget.LastUpdateByName = LastUpdateByName;
             widget.LastUpdateDate = LastUpdateDate;
-            widget.LayoutID = LayoutID;
-            widget.PageID = PageID;
+            widget.LayoutId = LayoutId;
+            widget.PageId = PageId;
             widget.RuleID = RuleID;
             widget.PartialView = PartialView;
             widget.Position = Position;
@@ -138,15 +128,31 @@ namespace ZKEACMS.Widget
             widget.Title = Title;
             widget.ViewModelTypeName = ViewModelTypeName;
             widget.WidgetName = WidgetName;
-            widget.ZoneID = ZoneID;
+            widget.ZoneId = ZoneId;
             widget.FormView = FormView;
             widget.StyleClass = StyleClass;
             widget.IsTemplate = IsTemplate;
             widget.Thumbnail = Thumbnail;
             widget.IsSystem = IsSystem;
-            
+
             widget.ExtendData = ExtendData;
             return widget;
+        }
+        public void SetZone(string zoneCode)
+        {
+            if (ZoneId.IsNullOrEmpty())
+            {
+                ZoneId = zoneCode;
+            }
+            availableZones.Add(zoneCode);
+        }
+        public bool IsInZone(string zoneCode)
+        {
+            return ZoneId == zoneCode || availableZones.Contains(zoneCode);
+        }
+        public bool IsVisible()
+        {
+            return Status == (int)WidgetStatus.Undefined || (Status ?? (int)WidgetStatus.Visible) == (int)WidgetStatus.Visible;
         }
     }
 }

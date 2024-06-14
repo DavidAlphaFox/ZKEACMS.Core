@@ -1,11 +1,10 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2018 ZKEASOFT
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using Easy.RepositoryPattern;
 using Microsoft.EntityFrameworkCore;
+using ZKEACMS.Updater.Models;
 
 namespace ZKEACMS.Updater
 {
@@ -13,7 +12,7 @@ namespace ZKEACMS.Updater
     {
         public void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
+            modelBuilder.Entity<DBVersion>();
         }
     }
 }

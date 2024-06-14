@@ -14,8 +14,13 @@ namespace Easy.Modules.User.Service
 {
     public class UserService : ServiceBase<UserEntity, EasyDbContext>, IUserService
     {
-        public UserService(IApplicationContext applicationContext, EasyDbContext easyDbContext) : base(applicationContext, easyDbContext)
+        private ILocalize _localize;
+        public UserService(IApplicationContext applicationContext,
+            ILocalize localize,
+            EasyDbContext easyDbContext)
+            : base(applicationContext, easyDbContext)
         {
+            _localize = localize;
         }
         public override DbSet<UserEntity> CurrentDbSet
         {
@@ -70,11 +75,11 @@ namespace Easy.Modules.User.Service
             }
             if (Get(item.UserID) != null)
             {
-                throw new Exception($"用户 {item.UserID} 已存在");
+                throw new Exception(_localize.Get("{0} is already exists").FormatWith(item.UserID));
             }
             if (item.Email.IsNotNullAndWhiteSpace() && Count(m => m.Email == item.Email && m.UserTypeCD == item.UserTypeCD) > 0)
             {
-                throw new Exception($"邮件地址 {item.Email} 已被使用");
+                throw new Exception(_localize.Get("{0} is already exists").FormatWith(item.Email));
             }
             var result = base.Add(item);
             if (!result.HasViolation)
@@ -84,7 +89,7 @@ namespace Easy.Modules.User.Service
                     item.Roles.Each(m =>
                     {
                         m.UserID = item.UserID;
-                        if (m.ActionType == ActionType.Create)
+                        if (m.ActionType.HasFlag(ActionType.Create))
                         {
                             DbContext.UserRoleRelation.Add(m);
                         }
@@ -106,15 +111,15 @@ namespace Easy.Modules.User.Service
                 item.Roles.Each(m =>
                 {
                     m.UserID = item.UserID;
-                    if (m.ActionType == ActionType.Create)
+                    if (m.ActionType.HasFlag(ActionType.Create))
                     {
                         DbContext.UserRoleRelation.Add(m);
                     }
-                    else if (m.ID > 0 && m.ActionType == ActionType.Delete)
+                    else if (m.ID > 0 && m.ActionType.HasFlag(ActionType.Delete))
                     {
                         DbContext.UserRoleRelation.Remove(m);
                     }
-                    else if (m.ActionType == ActionType.Update)
+                    else if (m.ActionType.HasFlag(ActionType.Update))
                     {
                         DbContext.UserRoleRelation.Update(m);
                     }
@@ -122,7 +127,7 @@ namespace Easy.Modules.User.Service
             }
             if (item.Email.IsNotNullAndWhiteSpace() && Count(m => m.UserID != item.UserID && m.Email == item.Email && m.UserTypeCD == item.UserTypeCD) > 0)
             {
-                throw new Exception($"邮件地址 {item.Email} 已被使用");
+                throw new Exception(_localize.Get("{0} is already exists").FormatWith(item.Email));
             }
 
             var result = base.Update(item);
@@ -143,9 +148,9 @@ namespace Easy.Modules.User.Service
             return null;
         }
 
-        public UserEntity SetResetToken(string userID, UserType userType)
+        public UserEntity SetResetToken(string email, UserType userType)
         {
-            var user = Get(m => (m.UserID == userID || m.Email == userID) && m.UserTypeCD == (int)userType).FirstOrDefault();
+            var user = Get(m => m.Email == email && m.UserTypeCD == (int)userType).FirstOrDefault();
             if (user != null)
             {
                 user.ResetToken = Guid.NewGuid().ToString("N");
@@ -157,7 +162,7 @@ namespace Easy.Modules.User.Service
 
         public bool ResetPassWord(string token, string newPassword)
         {
-            var user = Get(m => m.ResetToken == token && m.UserTypeCD == (int)UserType.Customer).FirstOrDefault();
+            var user = Get(m => m.ResetToken == token).FirstOrDefault();
             if (user != null)
             {
                 if (user.ResetTokenDate.HasValue && (DateTime.Now - user.ResetTokenDate.Value).TotalHours < 24)

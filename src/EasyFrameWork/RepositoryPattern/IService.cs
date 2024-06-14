@@ -1,6 +1,7 @@
 /* http://www.zkea.net/ 
  * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using System;
 using System.Linq.Expressions;
 using System.Collections.Generic;
@@ -36,6 +37,6 @@ namespace Easy.RepositoryPattern
         void Remove(Expression<Func<T, bool>> filter);
         void RemoveRange(params T[] items);
         void BeginBulkSave();
-        void SaveChanges();
+        void EndBulkSave();
     }
 }

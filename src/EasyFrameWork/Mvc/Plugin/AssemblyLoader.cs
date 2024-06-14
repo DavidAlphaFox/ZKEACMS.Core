@@ -1,6 +1,7 @@
 /* http://www.zkea.net/ 
- * Copyright 2018 ZKEASOFT 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using Microsoft.Extensions.DependencyModel;
 using System;
 using System.Collections.Generic;
@@ -19,22 +20,23 @@ namespace Easy.Mvc.Plugin
 {
     public class AssemblyLoader
     {
-        private static bool Resolving { get; set; }
-        public AssemblyLoader()
+        private static Dictionary<string, Assembly> LoadedAssemblies { get; set; }
+        public AssemblyLoader(List<PluginInfo> plugins)
         {
             DependencyAssemblies = new List<Assembly>();
+            PluginInfos = plugins ?? new List<PluginInfo>();
         }
         public string CurrentPath { get; set; }
         public string AssemblyPath { get; set; }
         public Assembly CurrentAssembly { get; private set; }
+        public List<PluginInfo> PluginInfos { get; set; }
         public List<Assembly> DependencyAssemblies { get; private set; }
-        private TypeInfo PluginTypeInfo = typeof(IPluginStartup).GetTypeInfo();
+        private readonly TypeInfo PluginTypeInfo = typeof(IPluginStartup).GetTypeInfo();
         public IEnumerable<Assembly> LoadPlugin(string path)
         {
             if (CurrentAssembly == null)
             {
                 AssemblyPath = path;
-                //AssemblyLoadContext.Default.Resolving += AssemblyResolving;
                 CurrentAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
                 ResolveDenpendency(CurrentAssembly);
                 yield return CurrentAssembly;
@@ -46,41 +48,31 @@ namespace Easy.Mvc.Plugin
             else { throw new Exception("A loader just can load one assembly."); }
         }
 
-        //private Assembly AssemblyResolving(AssemblyLoadContext arg1, AssemblyName arg2)
-        //{
-        //    if (arg2.FullName == CurrentAssembly.FullName)
-        //    {
-        //        return CurrentAssembly;
-        //    }
-        //    var deps = DependencyContext.Default;
-        //    if (deps.CompileLibraries.Any(d => d.Name == arg2.Name))
-        //    {
-        //        return Assembly.Load(arg2);
-        //    }
-
-        //    foreach (var item in DependencyAssemblies)
-        //    {
-        //        if (item.FullName == arg2.FullName)
-        //        {
-        //            return item;
-        //        }
-        //    }
-        //    return null;
-        //}
         private void ResolveDenpendency(Assembly assembly)
         {
-            string currentName = assembly.GetName().Name;
-            List<CompilationLibrary> dependencyCompilationLibrary = DependencyContext.Load(assembly)
-                .CompileLibraries.Where(de => de.Name != currentName && !DependencyContext.Default.CompileLibraries.Any(m => m.Name == de.Name))
-                .ToList();
-
-            dependencyCompilationLibrary.Each(libaray =>
+            if (LoadedAssemblies == null)
             {
-                foreach (var item in libaray.ResolveReferencePaths(new DependencyAssemblyResolver(Path.GetDirectoryName(assembly.Location))))
+                LoadedAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToDictionary(m => GetAssemblyNameVersion(m.GetName()));
+            }
+            string nameVersion = GetAssemblyNameVersion(assembly.GetName());
+            if (!LoadedAssemblies.ContainsKey(nameVersion))
+            {
+                LoadedAssemblies.Add(nameVersion, assembly);
+            }
+            List<Assembly> dependencies = new List<Assembly>();
+            DependencyAssemblyResolver dependencyAssemblyResolver = new DependencyAssemblyResolver(Path.GetDirectoryName(assembly.Location));
+            foreach (var item in dependencyAssemblyResolver.ResolveAssemblyPaths())
+            {
+                AssemblyName assemblyName = AssemblyName.GetAssemblyName(item);
+                string assemblyNameVersion = GetAssemblyNameVersion(assemblyName);
+                if (!LoadedAssemblies.ContainsKey(assemblyNameVersion))
                 {
-                    DependencyAssemblies.Add(AssemblyLoadContext.Default.LoadFromAssemblyPath(item));
+                    Assembly assemblyDep = AssemblyLoadContext.Default.LoadFromAssemblyPath(item);
+                    DependencyAssemblies.Add(assemblyDep);
+                    LoadedAssemblies.Add(assemblyNameVersion, assemblyDep);
+                    dependencies.Add(assemblyDep);
                 }
-            });
+            }
 
             PluginDescriptor plugin = null;
             foreach (var typeInfo in assembly.DefinedTypes)
@@ -89,11 +81,13 @@ namespace Easy.Mvc.Plugin
 
                 if (PluginTypeInfo.IsAssignableFrom(typeInfo))
                 {
-                    plugin = new PluginDescriptor();
-                    plugin.PluginType = typeInfo.AsType();
-                    plugin.Assembly = assembly;
-                    plugin.Dependency = dependencyCompilationLibrary;
-                    plugin.CurrentPluginPath = CurrentPath;
+                    plugin = new PluginDescriptor
+                    {
+                        PluginType = typeInfo.AsType(),
+                        Assembly = assembly,
+                        Dependencies = dependencies,
+                        CurrentPluginPath = CurrentPath
+                    };
                 }
             }
 
@@ -102,6 +96,10 @@ namespace Easy.Mvc.Plugin
                 PluginActivtor.LoadedPlugins.Add(plugin);
             }
 
+        }
+        private string GetAssemblyNameVersion(AssemblyName assemblyName)
+        {
+            return $"{assemblyName.Name}-{assemblyName.Version.ToString()}";
         }
     }
 }

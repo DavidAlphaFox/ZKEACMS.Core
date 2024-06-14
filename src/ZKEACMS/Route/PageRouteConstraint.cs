@@ -1,9 +1,6 @@
-/*!
- * http://www.zkea.net/
- * Copyright 2018 ZKEASOFT
- * 深圳市纸壳软件有限公司
- * http://www.zkea.net/licenses
- */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
 
 using Easy.Extend;
 using Microsoft.AspNetCore.Http;
@@ -18,25 +15,29 @@ namespace ZKEACMS
 {
     public class PageRouteConstraint : IRouteConstraint
     {
+        const string _homePath = "/";
+
         public bool Match(HttpContext httpContext, IRouter route, string routeKey, RouteValueDictionary values, RouteDirection routeDirection)
         {
             if (routeDirection == RouteDirection.UrlGeneration) return false;
 
-            const string start = "/";
-            string path = start;
+            string path = $"{_homePath}{values[routeKey]}";
 
-            path = $"{start}{values[routeKey]}";
-
-            if (path != start)
+            if (path != _homePath)
             {
                 var routeDataProviders = httpContext.RequestServices.GetService<IEnumerable<IRouteDataProvider>>();
                 foreach (var item in routeDataProviders.OrderBy(m => m.Order))
                 {
                     path = item.ExtractVirtualPath(path, values);
+
+                    if (path.IsNullOrEmpty()) path = _homePath;
                 }
             }
-            values[routeKey] = path;
-            if (path == start) return true;
+
+            values[routeKey] = path.ToLower();
+
+            if (path == _homePath) return true;
+
             return httpContext.RequestServices.GetService<IPageService>().IsExists(path);
         }
     }

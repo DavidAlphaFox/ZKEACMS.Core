@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System.Text.RegularExpressions;
 using Easy.Extend;
 
@@ -9,7 +12,7 @@ namespace Easy.ViewPort.Validator
         public RegularValidator(string expression)
         {
             this.Expression = expression;
-            BaseErrorMessage = "{0}的输入的值不符合要求";
+            BaseErrorMessage = "{0} is invalid";
         }
         public string Expression { get; set; }
 

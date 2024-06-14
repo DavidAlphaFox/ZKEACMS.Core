@@ -1,6 +1,8 @@
 /* http://www.zkea.net/ 
  * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
+using Easy.Logging;
 using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Collections.Generic;
@@ -12,18 +14,22 @@ namespace ZKEACMS.Common.Service
 {
     public class EventViewerService : IEventViewerService
     {
-        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IWebHostEnvironment _hostingEnvironment;
         private const string LoggerFoler = "Logs";
-        public EventViewerService(IHostingEnvironment hostingEnvironment)
+        public EventViewerService(IWebHostEnvironment hostingEnvironment)
         {
             _hostingEnvironment = hostingEnvironment;
         }
         public void Delete(string id)
         {
-            var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, LoggerFoler, id);
+            var filePath = GetLogFilePath(id);
             if (File.Exists(filePath))
             {
-                File.Delete(filePath);
+                try
+                {
+                    File.Delete(filePath);
+                }
+                catch { }                
             }
         }
 
@@ -45,14 +51,22 @@ namespace ZKEACMS.Common.Service
             }
         }
 
-        public string ReadLog(string id)
+        public Stream GetStream(string id)
         {
-            var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, LoggerFoler, id);
-            if (File.Exists(filePath))
+            return new FileStream(GetLogFilePath(id), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        }
+
+        public IEnumerable<LogEntry> Take(string id, long position, int take)
+        {
+            using (LogReader reader = new LogReader(GetLogFilePath(id), Encoding.UTF8))
             {
-                return File.ReadAllText(filePath, Encoding.UTF8);
+                reader.SetPosition(position);
+                return reader.Take(take).ToList();
             }
-            return string.Empty;
+        }
+        private string GetLogFilePath(string id)
+        {
+            return Path.Combine(_hostingEnvironment.ContentRootPath, LoggerFoler, id);
         }
     }
 }

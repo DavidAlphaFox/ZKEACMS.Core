@@ -1,6 +1,8 @@
 /* http://www.zkea.net/ 
  * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
+using Easy.Constant;
 using Easy.ViewPort.Descriptor;
 using System;
 using System.Collections.Generic;
@@ -16,15 +18,24 @@ namespace ZKEACMS.Extend
         }
         public static TextBoxDescriptor MediaSelector(this TextBoxDescriptor descriptor)
         {
-            return descriptor.AddClass(StringKeys.SelectImageClass).AddProperty("data-url", Urls.SelectMedia).AddProperty("placeholder", "可粘贴上传图片");
+            return descriptor.AddClass(StringKeys.SelectImageClass).AddProperty("data-url", Urls.SelectMedia);
         }
         public static TextBoxDescriptor FileSelector(this TextBoxDescriptor descriptor)
         {
-            return descriptor.AddClass(StringKeys.SelectMediaClass).AddProperty("data-url", Urls.SelectMedia).AddProperty("placeholder", "选择文件");
+            return descriptor.AddClass(StringKeys.SelectMediaClass).AddProperty("data-url", Urls.SelectMedia);
         }
         public static TextBoxDescriptor UrlPart(this TextBoxDescriptor descriptor)
         {
-            return descriptor.AddClass(StringKeys.UrlPart).SetTemplate("UrlPart");
+            return descriptor.AddClass(StringKeys.UrlPart).SetTemplate("UrlPart").RegularExpression(RegularExpression.LetterNumberOrLine);
         }
+        public static TextBoxDescriptor InnerUrl(this TextBoxDescriptor descriptor)
+        {
+            return descriptor.RegularExpression(@"^~\/([A-Za-z0-9_-]|\/)+$");
+        }
+        public static TextBoxDescriptor RandomText(this TextBoxDescriptor descriptor)
+        {
+            return descriptor.SetTemplate("RandomText");
+        }
+
     }
 }

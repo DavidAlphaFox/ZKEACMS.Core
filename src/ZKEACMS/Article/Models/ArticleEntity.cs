@@ -1,4 +1,7 @@
-/* http://www.zkea.net/ Copyright 2016 ZKEASOFT http://www.zkea.net/licenses */
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using System;
 using System.Collections.Generic;
 using Easy.Constant;
@@ -27,16 +30,16 @@ namespace ZKEACMS.Article.Models
         public string ImageUrl { get; set; }
         public int? ArticleTypeID { get; set; }
         public DateTime? PublishDate { get; set; }
-        public bool IsPublish { get; set; }        
+        public bool IsPublish { get; set; }
     }
     class ArticleEntityMeta : ViewMetaData<ArticleEntity>
     {
         protected override void ViewConfigure()
         {
-            ViewConfig(m => m.ID).AsHidden();
-            ViewConfig(m => m.Title).AsTextBox().Required().Order(1).ShowInGrid().Search(Easy.LINQ.Query.Operators.Contains);
-            ViewConfig(m => m.Url).AsTextBox().Order(2).MaxLength(100).UrlPart();
-            ViewConfig(m => m.Status).AsDropDownList().DataSource(DicKeys.RecordStatus, SourceType.Dictionary);
+            ViewConfig(m => m.ID).AsHidden().ShowInGrid().Order(1);
+            ViewConfig(m => m.Title).AsTextBox().Required().Order(2).ShowInGrid().Search(Easy.LINQ.Query.Operators.Contains);
+            ViewConfig(m => m.Url).AsTextBox().Order(3).MaxLength(100).UrlPart().Required().RandomText();
+            ViewConfig(m => m.Status).AsDropDownList().DataSource(DicKeys.RecordStatus, SourceType.Dictionary).ShowInGrid();
             ViewConfig(m => m.ImageThumbUrl).AsTextBox().MediaSelector();
             ViewConfig(m => m.ImageUrl).AsTextBox().MediaSelector();
             ViewConfig(m => m.ArticleTypeID)
@@ -47,7 +50,7 @@ namespace ZKEACMS.Article.Models
                 .ShowInGrid();
 
             ViewConfig(m => m.ArticleContent).AsTextArea().AddClass(StringKeys.HtmlEditorClass);
-            ViewConfig(m => m.PublishDate).AsTextBox().Hide();
+            ViewConfig(m => m.PublishDate).AsTextBox().FormatAsDate().ShowInGrid();
             ViewConfig(m => m.IsPublish).AsTextBox().Hide().ShowInGrid();
         }
     }

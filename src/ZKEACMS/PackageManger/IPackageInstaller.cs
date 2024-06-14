@@ -1,6 +1,7 @@
 /* http://www.zkea.net/ 
  * Copyright (c) ZKEASOFT. All rights reserved. 
  * http://www.zkea.net/licenses */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace ZKEACMS.PackageManger
     {
         string PackageInstaller { get; }
         object Install(Package package);
-        object Install(string packageContent);
+        Type GetPackageType();
         Package Pack(object obj);
     }
 }

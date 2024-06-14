@@ -1,3 +1,7 @@
+/* http://www.zkea.net/ 
+ * Copyright (c) ZKEASOFT. All rights reserved. 
+ * http://www.zkea.net/licenses */
+
 using Easy.RepositoryPattern;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -19,6 +23,8 @@ namespace ZKEACMS.Article
             modelBuilder.Entity<ArticleSummaryWidget>();
             modelBuilder.Entity<ArticleTopWidget>();
             modelBuilder.Entity<ArticleTypeWidget>();
+            modelBuilder.Entity<ArticleSpecialDetailWidget>();
+            modelBuilder.Entity<ArticleGallery>();
         }
     }
 }
